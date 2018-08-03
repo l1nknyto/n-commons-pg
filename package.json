@@ -1,0 +1,27 @@
+{
+  "name": "n-commons-pg",
+  "version": "1.0.0",
+  "description": "Node Commons Utilities for PostgreSQL",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/l1nknyto/n-commons-pg.git"
+  },
+  "keywords": [
+    "node",
+    "utility",
+    "postgresql"
+  ],
+  "author": "Johny Jugianto",
+  "license": "Apache",
+  "bugs": {
+    "url": "https://github.com/l1nknyto/n-commons-pg/issues"
+  },
+  "homepage": "https://github.com/l1nknyto/n-commons-pg#readme",
+  "dependencies": {
+    "pg": "^7.4.3"
+  }
+}
