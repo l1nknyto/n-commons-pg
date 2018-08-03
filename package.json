@@ -16,7 +16,7 @@
     "postgresql"
   ],
   "author": "Johny Jugianto",
-  "license": "Apache",
+  "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/l1nknyto/n-commons-pg/issues"
   },
