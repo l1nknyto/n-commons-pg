@@ -1,5 +1,6 @@
 const PgUtils  = require('./index');
 const NCommons = require('n-commons');
+const Logger   = require('n-commons/logger');
 
 class Crud
 {
@@ -22,6 +23,9 @@ class Crud
 
   executeQuery(exec, query) {
     if (query && query.sql) {
+      if (Logger.isDebug()) {
+        Logger.debug(this.constructor.name + '.executeQuery', query);
+      }
       exec.executor.execute(query.sql, query.params, NCommons.ok(exec.callback, function(rows) {
         return exec.callback(null, (rows) ? rows[0] : {});
       }));
@@ -34,9 +38,10 @@ class Crud
     var options = (id === Object(id)) ? this.createSelectBindingOptions(id) : this.createDefaultSelectBindingOptions(id);
     var query = PgUtils.getSelectSqlBindings(this.tableName, options);
     if (query && query.sql) {
-      PgUtils.select(query.sql, query.params, NCommons.ok(callback, function(rows) {
-        return callback(null, rows[0]);
-      }));
+      if (Logger.isDebug()) {
+        Logger.debug(this.constructor.name + '.retrive', query);
+      }
+      PgUtils.selectOne(query.sql, query.params, callback);
     } else {
       return callback(null, {});
     }
@@ -63,6 +68,9 @@ class Crud
     var options = this.createSelectBindingOptions(params);
     var query = PgUtils.getSelectSqlBindings(this.tableName, options);
     if (query && query.sql) {
+      if (Logger.isDebug()) {
+        Logger.debug(this.constructor.name + '.retriveAll', query);
+      }
       PgUtils.select(query.sql, query.params, callback);
     } else {
       return callback(null, []);
