@@ -5,10 +5,9 @@ const Logger   = require('n-commons/logger');
 class Crud
 {
   /**
-   * markRawParams
-     array of array(0: field, 1: value, 2: operator)
+   * markRawParams: array of array(0: field, 1: value, 2: operator?)
    */
-  constructor(tableName, tableFields, markRawParams, options = { idField: 'id', useReturning: false }) {
+  constructor(tableName, tableFields, markRawParams, options = { idField: 'id', useReturning: true }) {
     this.tableName     = tableName;
     this.tableFields   = tableFields;
     this.markRawParams = (markRawParams) ? markRawParams : [];
@@ -34,6 +33,11 @@ class Crud
     }
   }
 
+  /**
+   * id
+   * - id value /
+   * - { ...field:value...,  __fields, __where, __whereRaw }
+   */
   retrive(id, callback) {
     var options = (id === Object(id)) ? this.createSelectBindingOptions(id) : this.createDefaultSelectBindingOptions(id);
     var query = PgUtils.getSelectSqlBindings(this.tableName, options);
@@ -49,18 +53,18 @@ class Crud
 
   createDefaultSelectBindingOptions(id) {
     return {
-      idField      : this.options.idField,
-      fields       : [this.options.idField].concat(this.tableFields),
-      where        : [[this.options.idField, id]],
+      idField  : this.options.idField,
+      fields   : this.tableFields,
+      where    : [[this.options.idField, id]],
     };
   }
 
   createSelectBindingOptions(params) {
     return {
-      idField      : this.options.idField,
-      fields       : (params.__fields) ? params.__fields : this.tableFields,
-      where        : params.__where,
-      whereRaw     : params.__whereRaw
+      idField  : this.options.idField,
+      fields   : (params.__fields) ? params.__fields : this.tableFields,
+      where    : params.__where,
+      whereRaw : params.__whereRaw
     };
   }
 
@@ -86,7 +90,7 @@ class Crud
 
   createUpdateBindingOptions(params) {
     var options = this.createSelectBindingOptions(params);
-    options.useReturning = (params.__useReturning) ? params.__useReturning : this.options.useReturning;
+    options.useReturning = (params.__useReturning) ? params.__useReturning : false;
     return options;
   }
 
