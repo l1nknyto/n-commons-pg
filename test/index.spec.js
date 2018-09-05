@@ -2,7 +2,7 @@ var assert = require('assert');
 var expect = require('chai').expect;
 var should = require('chai').should();
 
-const PgUtils = require('../index');
+const PgUtils = require('../index')();
 
 var table = 'tablename';
 var options =  {

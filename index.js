@@ -2,58 +2,6 @@ const domain = require('domain');
 const pg     = require('pg');
 const Pool   = require('pg-pool');
 
-var config = {
-  dbConfig : null,
-  pool     : null,
-  logger   : null
-};
-
-function init(dbConfig, logger = console)
-{
-  config.dbConfig = dbConfig;
-  config.pool     = new Pool(dbConfig);
-  config.logger   = logger;
-}
-
-function execute(query, params, callback)
-{
-  if (!query) return callback(null, null);
-  config.pool.query(query, params, function(err, result) {
-    if (err) return handleError(err, query, params, callback);
-    else if (result.rowCount == 0) return callback({ empty:true });
-    else return callback(null, result.rows);
-  })
-}
-
-function handleError(err, query, params, callback)
-{
-  config.logger.error(err, query, params);
-  return callback(err);
-}
-
-function select(query, params, callback)
-{
-  if (!query) return callback(null, null);
-  config.pool.query(query, params, function(err, result) {
-    if (err) return handleError(err, query, params, callback);
-    else if (result.rows.length == 0) return callback({ empty:true });
-    else return callback(null, result.rows);
-  })
-}
-
-function selectOne(query, params, callback)
-{
-  select(query, params, function(err, rows) {
-    if (err) return callback(err);
-    return callback(null, (rows) ? rows[0] : {});
-  });
-}
-
-function end()
-{
-  config.pool.end()
-}
-
 function getExecutorInfo()
 {
   if (arguments.length == 2) return {
@@ -61,21 +9,19 @@ function getExecutorInfo()
     params   : arguments[0],
     callback : arguments[1]
   };
-
   if (arguments.length == 3) return {
     executor : arguments[0],
     params   : arguments[1],
     callback : arguments[2]
   };
-
   return {};
 }
 
 /**
  * options
-     fields
-     where
-     whereRaw
+ * - fields
+ * - where
+ * - whereRaw
  */
 function getSelectSqlBindings(table, options, data)
 {
@@ -269,8 +215,8 @@ function PgTransaction() {
   return this
 }
 
-PgTransaction.prototype.begin = function(callback) {
-  var client = new pg.Client(config.dbConfig)
+PgTransaction.prototype.begin = function(dbConfig, callback) {
+  var client = new pg.Client(dbConfig)
   client.connect((err) => {
     if (err) return callback(err)
     else beginTransaction(this, client, callback)
@@ -345,46 +291,104 @@ function createTransaction()
   return new PgTransaction();
 }
 
-function beginTransaction_(callback)
-{
-  var config = new PgTransaction();
-  config.begin(callback);
-  return config;
-}
-
-function runTransaction(next, callback)
-{
-  return beginTransaction_(function(err, transaction) {
-    if (err) {
-      return callback(err);
-    }
-    next(function(err) {
-      var prevArguments = arguments;
-      transaction.end(err, function(e) {
-        if (e) {
-          return callback(err);
-        }
-        return callback(...prevArguments);
-      });
-    }, transaction);
-  });
-}
 /*** End class PgTransaction ***/
 
-var instance = {
-  init                 : init,
-  end                  : end,
-  execute              : execute,
-  select               : select,
-  selectOne            : selectOne,
-  getExecutorInfo      : getExecutorInfo,
-  getSelectSqlBindings : getSelectSqlBindings,
-  getInsertSqlBindings : getInsertSqlBindings,
-  getUpdateSqlBindings : getUpdateSqlBindings,
-  getDeleteSqlBindings : getDeleteSqlBindings,
-  createTransaction    : createTransaction,
-  beginTransaction     : beginTransaction_,
-  runTransaction       : runTransaction
+module.exports = function() {
+  return new pgutils();
 };
 
-module.exports = instance;
+function pgutils()
+{
+  var self = this;
+
+  var config = {
+    dbConfig : null,
+    pool     : null,
+    logger   : null
+  };
+
+  self.init                 = init;
+  self.end                  = end;
+  self.execute              = execute;
+  self.select               = select;
+  self.selectOne            = selectOne;
+  self.getExecutorInfo      = getExecutorInfo;
+  self.getSelectSqlBindings = getSelectSqlBindings;
+  self.getInsertSqlBindings = getInsertSqlBindings;
+  self.getUpdateSqlBindings = getUpdateSqlBindings;
+  self.getDeleteSqlBindings = getDeleteSqlBindings;
+  self.createTransaction    = createTransaction;
+  self.beginTransaction     = beginTransaction_;
+  self.runTransaction       = runTransaction;
+
+  function init(dbConfig, logger = console)
+  {
+    config.dbConfig = dbConfig;
+    config.pool     = new Pool(dbConfig);
+    config.logger   = logger;
+  }
+
+  function end()
+  {
+    config.pool.end()
+  }
+
+  function handleError(err, query, params, callback)
+  {
+    config.logger.error(err, query, params);
+    return callback(err);
+  }
+
+  function execute(query, params, callback)
+  {
+    if (!query) return callback(null, null);
+    config.pool.query(query, params, function(err, result) {
+      if (err) return handleError(err, query, params, callback);
+      else if (result.rowCount == 0) return callback({ empty:true });
+      else return callback(null, result.rows);
+    })
+  }
+
+  function select(query, params, callback)
+  {
+    if (!query) return callback(null, null);
+    config.pool.query(query, params, function(err, result) {
+      if (err) return handleError(err, query, params, callback);
+      else if (result.rows.length == 0) return callback({ empty:true });
+      else return callback(null, result.rows);
+    })
+  }
+
+  function selectOne(query, params, callback)
+  {
+    select(query, params, function(err, rows) {
+      if (err) return callback(err);
+      return callback(null, (rows) ? rows[0] : {});
+    });
+  }
+
+  function beginTransaction_(callback)
+  {
+    var instance = new PgTransaction();
+    instance.begin(config.dbConfig, callback);
+    return instance;
+  }
+
+  function runTransaction(next, callback)
+  {
+    return beginTransaction_(function(err, transaction) {
+      if (err) {
+        return callback(err);
+      }
+      next(function(err) {
+        var prevArguments = arguments;
+        transaction.end(err, function(e) {
+          if (e) {
+            return callback(err);
+          }
+          return callback(...prevArguments);
+        });
+      }, transaction);
+    });
+  }
+}

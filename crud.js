@@ -7,11 +7,16 @@ class Crud
   /**
    * markRawParams: array of array(0: field, 1: value, 2: operator?)
    */
-  constructor(tableName, tableFields, markRawParams, options = { idField: 'id', useReturning: true }) {
+  constructor(tableName, tableFields, markRawParams, options = null) {
     this.tableName     = tableName;
     this.tableFields   = tableFields;
     this.markRawParams = (markRawParams) ? markRawParams : [];
-    this.options       = options;
+
+    if (!options) {
+      this.options = { idField: 'id', useReturning: true };
+    } else if (undefined === this.options.useReturning) {
+      this.options.useReturning = true;
+    }
   }
 
   create() {
@@ -107,6 +112,10 @@ class Crud
     options.valuesRaw = this.markRawParams;
     var query   = PgUtils.getUpdateSqlBindings(this.tableName, options, exec.params);
     this.executeQuery(exec, query);
+  }
+
+  getRelations() {
+    return null;
   }
 }
 
