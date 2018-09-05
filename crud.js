@@ -1,4 +1,4 @@
-const PgUtils  = require('./index')();
+const PgUtils  = require('./index')(true);
 const NCommons = require('n-commons');
 const Logger   = require('n-commons/logger');
 

@@ -2,21 +2,6 @@ const domain = require('domain');
 const pg     = require('pg');
 const Pool   = require('pg-pool');
 
-function getExecutorInfo()
-{
-  if (arguments.length == 2) return {
-    executor : instance,
-    params   : arguments[0],
-    callback : arguments[1]
-  };
-  if (arguments.length == 3) return {
-    executor : arguments[0],
-    params   : arguments[1],
-    callback : arguments[2]
-  };
-  return {};
-}
-
 /**
  * options
  * - fields
@@ -292,9 +277,14 @@ function createTransaction()
 }
 
 /*** End class PgTransaction ***/
-
-module.exports = function() {
-  return new pgutils();
+var instance;
+module.exports = function(singleton = false) {
+  if (singleton) {
+    if (instance) return instance;
+    else return (instance = new pgutils());
+  } else {
+    return new pgutils();
+  }
 };
 
 function pgutils()
@@ -309,6 +299,7 @@ function pgutils()
 
   self.init                 = init;
   self.end                  = end;
+  self.getConfig            = getConfig;
   self.execute              = execute;
   self.select               = select;
   self.selectOne            = selectOne;
@@ -331,6 +322,11 @@ function pgutils()
   function end()
   {
     config.pool.end()
+  }
+
+  function getConfig()
+  {
+    return config;
   }
 
   function handleError(err, query, params, callback)
@@ -365,6 +361,21 @@ function pgutils()
       if (err) return callback(err);
       return callback(null, (rows) ? rows[0] : {});
     });
+  }
+
+  function getExecutorInfo()
+  {
+    if (arguments.length == 2) return {
+      executor : self,
+      params   : arguments[0],
+      callback : arguments[1]
+    };
+    if (arguments.length == 3) return {
+      executor : arguments[0],
+      params   : arguments[1],
+      callback : arguments[2]
+    };
+    return {};
   }
 
   function beginTransaction_(callback)
