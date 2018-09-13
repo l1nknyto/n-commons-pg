@@ -92,12 +92,21 @@ it('test where', function() {
   var builder = new JoinBuilderClass();
   builder.crud(crud1, 'c1');
   builder.crud(crud2, 'c2');
-  builder.where(crud1, 'id', '100').where(crud2, 'key', 'value')
+  builder.where(crud1, 'id', '100').where(crud2, 'key', 'value');
   expect(builder.build()).to.contain('WHERE C1.id=$1 AND C2.key=$2');
 
   var params = builder.whereParams;
   params.should.have.have.length(2);
   params.should.have.deep.equal(['100', 'value']);
+});
+
+it('test where raw value', function() {
+  var builder = new JoinBuilderClass();
+  builder.crud(crud1, 'c1');
+  builder.crud(crud2, 'c2');
+  builder.where(null, 'C1.id', 'now() + interval \'1 minute\'');
+  expect(builder.build()).to.contain('WHERE C1.id=now() + interval \'1 minute\'');
+  builder.whereParams.should.have.have.length(0);
 });
 
 it('test order', function() {

@@ -178,10 +178,15 @@ class JoinBuilder
   getWhereSql() {
     var sql = '';
     this.wheres.forEach((item) => {
-      var _operator = (item.operator) ? item.operator : '=';
+      var condition;
       var _conjuction = (item.conjuction) ? ' ' + item.conjuction.trim() + ' ' : ' AND ';
-      this.whereParams.push(item.value);
-      var condition = this.getCrudField(item.crud, item.field) + _operator + '$' + this.whereParams.length;
+      var _operator = (item.operator) ? item.operator : '=';
+      if (item.crud) {
+        this.whereParams.push(item.value);
+        condition = this.getCrudField(item.crud, item.field) + _operator + '$' + this.whereParams.length;
+      } else {
+        condition = item.field + _operator + item.value;
+      }
       if (sql) {
         sql += _conjuction + condition;
       }  else {
