@@ -37,11 +37,19 @@ class JoinBuilder
   }
 
   select(crud, field) {
+    if (field instanceof Array) {
+      field.forEach((f) => this._addSelectField(crud, f));
+    } else {
+      this._addSelectField(crud, field);
+    }
+    return this;
+  }
+
+  _addSelectField(crud, field) {
     this.selects.push({
       crud  : crud,
       field : field
     });
-    return this;
   }
 
   where(crud, field, value, operator = '=', conjuction = 'AND') {
