@@ -26,12 +26,6 @@ class Crud2 extends Crud
   constructor(tableFields, markRawParams, options = null) {
     super('crud2', ['id', 'key', 'title'], null, null);
   }
-
-  getRelations() {
-    return {
-      'id' : { crud: Crud1, key: 'key' }
-    };
-  }
 }
 
 var crud1 = new Crud1();

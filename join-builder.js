@@ -162,17 +162,30 @@ class JoinBuilder
     for (var key in this.withs) {
       var otherWith = this.withs[key];
       if (crud.tableName != key) {
-        var relations = crud.getRelations();
-        if (relations) for (var r in relations) {
-          if (otherWith.crud instanceof relations[r].crud) {
-            var key1 = otherWith.alias + '.' + relations[r].key;
-            var key2 = this.withs[crud.tableName].alias + '.' + r;
-            return ' ON ' + key1 + '=' + key2;
-          }
+        var relationCondition;
+        if (relationCondition = this._getCrudRelations(crud.tableName, key)) {
+          return relationCondition;
+        } else if (relationCondition = this._getCrudRelations(key, crud.tableName)) {
+          return relationCondition;
         }
       }
     }
     return '';
+  }
+
+  _getCrudRelations(tableName1, tableName2) {
+    var with1 = this.withs[tableName1];
+    var with2 = this.withs[tableName2];
+
+    var relations = with1.crud.getRelations();
+    if (relations) for (var r in relations) {
+      if (with2.crud instanceof relations[r].crud) {
+        var key1 = with1.alias + '.' + r;
+        var key2 = with2.alias + '.' + relations[r].key;
+        return ' ON ' + key1 + '=' + key2;
+      }
+    }
+    return null;
   }
 
   getWhereSql() {
