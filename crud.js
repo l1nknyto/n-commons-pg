@@ -117,6 +117,20 @@ class Crud
   getRelations() {
     return null;
   }
+
+  getField(field, alias = '') {
+    if (!field || this.tableFields.indexOf(field) == -1) return [];
+    if (!alias) return field;
+    if ('*' == field) {
+      return this.tableFields.map((item) => this.getFieldAs(item, alias));
+    } else {
+      return this.getFieldAs(field, alias);
+    }
+  }
+
+  getFieldAs(field, alias) {
+    return alias + '.' + field + ' AS ' + alias + '__' + field;
+  }
 }
 
 module.exports = Crud;

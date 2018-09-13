@@ -278,7 +278,7 @@ function createTransaction()
 
 /*** End class PgTransaction ***/
 var instance;
-module.exports = function(singleton = false) {
+module.exports = function(singleton = true) {
   if (singleton) {
     if (instance) return instance;
     else return (instance = new pgutils());
