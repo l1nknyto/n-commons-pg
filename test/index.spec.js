@@ -24,6 +24,16 @@ it('test getSelectSqlBindings', function() {
   result.should.have.property('params').to.deep.equal(['value1', 'value2-where']);
 });
 
+it('test getSelectSqlBindings using whereRaw', function() {
+  var testOptions = Object.assign({
+    whereRaw : 'field2 = value2-where'
+  }, options);
+  var result = PgUtils.getSelectSqlBindings(table, testOptions, data);
+  result.should.have.property('sql').equal('SELECT field1, field2 FROM tablename WHERE field2 = value2-where AND field1=$1');
+  result.should.have.property('params').to.have.length(1);
+  result.should.have.property('params').to.deep.equal(['value1']);
+});
+
 it('test getUpdateSqlBindings', function() {
   var testOptions = Object.assign({
     useReturning : false,
