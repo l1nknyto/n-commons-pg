@@ -7,7 +7,7 @@ class Crud
   /**
    * markParams: array of array(0: field, 1: value, 2: operator?)
    */
-  constructor(tableName, tableFields, markParams, options = null) {
+  constructor(tableName, tableFields, markParams = null, options = null) {
     this.tableName   = tableName;
     this.tableFields = tableFields;
     this.markParams  = (markParams) ? markParams : [];
@@ -122,7 +122,7 @@ class Crud
     var exec    = PgUtils.getExecutorInfo(...arguments);
     var options = this.createUpdateBindingOptions(exec.params);
     var query   = null;
-    if (this.options.useTimestamp) {
+    if (this.options.useTimestamp && !exec.params.__noTimestamp) {
       if (!options.valuesRaw) {
         options.valuesRaw = [];
       }
