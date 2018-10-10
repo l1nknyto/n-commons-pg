@@ -13,8 +13,9 @@ class Crud
     this.markParams  = (markParams) ? markParams : [];
 
     if (!options) {
-      this.options = { idField: 'id', useReturning: true };
+      this.options = { idField: 'id', useReturning: true, useTimestamp: false };
     } else {
+      this.options = options;
       if (undefined === this.options.idField) {
         this.options.idField = 'id';
       }
