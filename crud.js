@@ -5,23 +5,35 @@ const Logger   = require('n-commons/logger');
 class Crud
 {
   /**
-   * markRawParams: array of array(0: field, 1: value, 2: operator?)
+   * markParams: array of array(0: field, 1: value, 2: operator?)
    */
-  constructor(tableName, tableFields, markRawParams, options = null) {
-    this.tableName     = tableName;
-    this.tableFields   = tableFields;
-    this.markRawParams = (markRawParams) ? markRawParams : [];
+  constructor(tableName, tableFields, markParams, options = null) {
+    this.tableName   = tableName;
+    this.tableFields = tableFields;
+    this.markParams  = (markParams) ? markParams : [];
 
     if (!options) {
       this.options = { idField: 'id', useReturning: true };
-    } else if (undefined === this.options.useReturning) {
-      this.options.useReturning = true;
+    } else {
+      if (undefined === this.options.idField) {
+        this.options.idField = 'id';
+      }
+      if (undefined === this.options.useReturning) {
+        this.options.useReturning = true;
+      }
+      if (undefined === this.options.useTimestamp) {
+        this.options.useTimestamp = false;
+      }
     }
   }
 
   create() {
-    var exec = PgUtils.getExecutorInfo(...arguments);
-    var query = PgUtils.getInsertSqlBindings(this.tableName, this.tableFields, exec.params);
+    var exec    = PgUtils.getExecutorInfo(...arguments);
+    var dataRaw = [];
+    if (this.options.useTimestamp) {
+      dataRaw.push(['created_at', 'now()']);
+    }
+    var query = PgUtils.getInsertSqlBindings(this.tableName, this.tableFields, exec.params, dataRaw);
     this.executeQuery(exec, query);
   }
 
@@ -89,6 +101,12 @@ class Crud
   update() {
     var exec    = PgUtils.getExecutorInfo(...arguments);
     var options = this.createUpdateBindingOptions(exec.params);
+    if (this.options.useTimestamp) {
+      if (!options.valuesRaw) {
+        options.valuesRaw = [];
+      }
+      options.valuesRaw.push(['updated_at', 'now()']);
+    }
     var query   = PgUtils.getUpdateSqlBindings(this.tableName, options, exec.params);
     this.executeQuery(exec, query);
   }
@@ -96,20 +114,34 @@ class Crud
   createUpdateBindingOptions(params) {
     var options = this.createSelectBindingOptions(params);
     options.useReturning = (params.__useReturning) ? params.__useReturning : false;
+    options.valuesRaw    = (params.__valueRaw) ? params.__valueRaw : null;
     return options;
   }
 
   delete() {
     var exec    = PgUtils.getExecutorInfo(...arguments);
     var options = this.createUpdateBindingOptions(exec.params);
-    var query   = PgUtils.getDeleteSqlBindings(this.tableName, options, exec.params);
+    var query   = null;
+    if (this.options.useTimestamp) {
+      if (!options.valuesRaw) {
+        options.valuesRaw = [];
+      }
+      options.valuesRaw.push(['deleted_at', 'now()']);
+      query = PgUtils.getUpdateSqlBindings(this.tableName, options, exec.params);
+    } else {
+      query = PgUtils.getDeleteSqlBindings(this.tableName, options, exec.params);
+    }
     this.executeQuery(exec, query);
   }
 
-  markDeleted() {
+  mark() {
     var exec    = PgUtils.getExecutorInfo(...arguments);
     var options = this.createUpdateBindingOptions(exec.params);
-    options.valuesRaw = this.markRawParams;
+    if (options.valuesRaw) {
+      options.valuesRaw = options.valuesRaw.concat(this.markParams);
+    } else {
+      options.valuesRaw = this.markParams;
+    }
     var query   = PgUtils.getUpdateSqlBindings(this.tableName, options, exec.params);
     this.executeQuery(exec, query);
   }

@@ -31,7 +31,7 @@ function createSelectSql(sqlParams, tableName, options, data)
   return 'SELECT ' + options.fields.join(', ') + ' FROM '+ tableName + sqlParams.whereSql;;
 }
 
-function getInsertSqlBindings(tableName, tableFields, data)
+function getInsertSqlBindings(tableName, tableFields, data, dataRaw = [])
 {
   var fields = []; var values = []; var params = [];
   for (var i = 0, j = 1; i < tableFields.length; i++) {
@@ -42,6 +42,11 @@ function getInsertSqlBindings(tableName, tableFields, data)
       values.push('$'+ j); j++;
       params.push(value);
     }
+  }
+  for (var i = 0; i < dataRaw.length; i++) {
+    var entry = data[i];
+    fields.push(entry[0]);
+    values.push(entry[1]);
   }
   if (values.length) {
     return {
