@@ -44,7 +44,7 @@ function getInsertSqlBindings(tableName, tableFields, data, dataRaw = [])
     }
   }
   for (var i = 0; i < dataRaw.length; i++) {
-    var entry = data[i];
+    var entry = dataRaw[i];
     fields.push(entry[0]);
     values.push(entry[1]);
   }
