@@ -2,6 +2,8 @@ const PgUtils  = require('./index')(true);
 const NCommons = require('n-commons');
 const Logger   = require('n-commons/logger');
 
+const DELETE_AT_CONDITION = 'deleted_at IS NULL';
+
 class Crud
 {
   /**
@@ -74,7 +76,16 @@ class Crud
       idField  : this.options.idField,
       fields   : this.tableFields,
       where    : [[this.options.idField, id]],
+      whereRaw : this.addDeleteAtCondition(params.__whereRaw)
     };
+  }
+
+  addDeleteAtCondition(whereRaw) {
+    if (this.options.useTimestamp) {
+      return (whereRaw) ? whereRaw + ' AND ' + DELETE_AT_CONDITION : DELETE_AT_CONDITION;
+    } else {
+      return whereRaw;
+    }
   }
 
   createSelectBindingOptions(params) {
@@ -82,7 +93,7 @@ class Crud
       idField  : this.options.idField,
       fields   : (params.__fields) ? params.__fields : this.tableFields,
       where    : params.__where,
-      whereRaw : params.__whereRaw
+      whereRaw : this.addDeleteAtCondition(params.__whereRaw)
     };
   }
 
@@ -108,7 +119,7 @@ class Crud
       }
       options.valuesRaw.push(['updated_at', 'now()']);
     }
-    var query   = PgUtils.getUpdateSqlBindings(this.tableName, options, exec.params);
+    var query = PgUtils.getUpdateSqlBindings(this.tableName, options, exec.params);
     this.executeQuery(exec, query);
   }
 
@@ -143,7 +154,7 @@ class Crud
     } else {
       options.valuesRaw = this.markParams;
     }
-    var query   = PgUtils.getUpdateSqlBindings(this.tableName, options, exec.params);
+    var query = PgUtils.getUpdateSqlBindings(this.tableName, options, exec.params);
     this.executeQuery(exec, query);
   }
 
