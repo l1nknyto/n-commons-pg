@@ -38,7 +38,7 @@ class JoinBuilder
     return this;
   }
 
-  crudTimestamp(crud) {
+  useTimestamp(crud) {
     if (crud.options.useTimestamp) {
       this.crudTimestamp.push(crud);
     }
