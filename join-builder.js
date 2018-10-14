@@ -232,7 +232,7 @@ class JoinBuilder
   }
 
   getWhereSql() {
-    var sql = '';
+    var sql = (this.whereRaw) ? this.whereRaw + ' AND ' : this.whereRaw;
     this.wheres.forEach((item) => {
       var condition;
       var _conjuction = (item.conjuction) ? ' ' + item.conjuction.trim() + ' ' : ' AND ';
@@ -249,7 +249,7 @@ class JoinBuilder
         sql = condition;
       }
     });
-    return (sql) ? sql + ' AND ' + this.whereRaw : this.whereRaw;
+    return sql;
   }
 
   getCrudField(crud, field) {
