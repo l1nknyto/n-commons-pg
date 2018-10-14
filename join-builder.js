@@ -131,7 +131,8 @@ class JoinBuilder
   getDeleteAtCondition(cruds) {
     var deleteAts = []
     for (var i = 0; i < cruds.length; i++) {
-      deleteAts.push(this.withs[crud.tableName].alias + '.' + cruds[i].getDeleteAtCondition());
+      var crud = cruds[i];
+      deleteAts.push(this.withs[crud.tableName].alias + '.' + crud.getDeleteAtCondition());
     }
     return deleteAts.join(' AND ');
   }
