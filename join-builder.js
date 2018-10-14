@@ -18,7 +18,7 @@ class JoinBuilder
     this.crudTimestamp = [];
     this.selects       = [];
     this.wheres        = [];
-    this.whereRaw      = [];
+    this.whereRaw      = '';
     this.whereParams   = [];
     this.orders        = [];
     this.limits        = {};
