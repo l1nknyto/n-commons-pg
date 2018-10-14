@@ -82,10 +82,14 @@ class Crud
 
   addDeleteAtCondition(whereRaw) {
     if (this.options.useTimestamp) {
-      return (whereRaw) ? whereRaw + ' AND ' + DELETE_AT_CONDITION : DELETE_AT_CONDITION;
+      return (whereRaw) ? whereRaw + ' AND ' + this.getDeleteAtCondition() : this.getDeleteAtCondition();
     } else {
       return whereRaw;
     }
+  }
+
+  getDeleteAtCondition() {
+    return DELETE_AT_CONDITION;
   }
 
   createSelectBindingOptions(params) {

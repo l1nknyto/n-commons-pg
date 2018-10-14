@@ -14,12 +14,14 @@ const Logger   = require('n-commons/logger');
 class JoinBuilder
 {
   constructor() {
-    this.withs       = {};
-    this.selects     = [];
-    this.wheres      = [];
-    this.whereParams = [];
-    this.orders      = [];
-    this.limits      = {};
+    this.withs         = {};
+    this.crudTimestamp = [];
+    this.selects       = [];
+    this.wheres        = [];
+    this.whereRaw      = [];
+    this.whereParams   = [];
+    this.orders        = [];
+    this.limits        = {};
   }
 
   /**
@@ -34,6 +36,12 @@ class JoinBuilder
       raw   : raw
     };
     return this;
+  }
+
+  crudTimestamp(crud) {
+    if (crud.options.useTimestamp) {
+      this.crudTimestamp.push(crud);
+    }
   }
 
   select(crud, field) {
@@ -63,6 +71,10 @@ class JoinBuilder
     return this;
   }
 
+  whereRaw(value) {
+    this.whereRaw = value;
+  }
+
   order(crud, field, direction = 'ASC') {
     this.orders.push({
       crud      : crud,
@@ -82,16 +94,46 @@ class JoinBuilder
 
   build() {
     var sql = 'SELECT ' + this.getSelectSql() + ' FROM '+ this.getFromSql();
-    if (this.wheres.length) {
+
+    var timestampCruds = this.getCrudUseTimestamp();
+    if (timestampCruds) {
+      var deleteAt = this.getDeleteAtCondition(timestampCruds);
+      this.whereRaw = (this.whereRaw) ? this.whereRaw + ' AND ' + deleteAt : deleteAt;
+    }
+
+    if (this.wheres.length || this.whereRaw) {
       sql += ' WHERE ' + this.getWhereSql();
     }
+
     if (this.orders.length) {
       sql += ' ORDER BY ' + this.getOrderSql();
     }
+
     if (this.limits.limit) {
       sql += this.getLimitSql();
     }
+
     return sql;
+  }
+
+  getCrudUseTimestamp() {
+    if (!this.crudTimestamp.length) {
+      for (var key in this.withs) {
+        var crud = this.withs[key].crud;
+        if (crud.options.useTimestamp) {
+          this.crudTimestamp.push(crud);
+        }
+      }
+    }
+    return this.crudTimestamp;
+  }
+
+  getDeleteAtCondition(cruds) {
+    var deleteAts = []
+    for (var i = 0; i < cruds.length; i++) {
+      deleteAts.push(this.withs[crud.tableName].alias + '.' + cruds[i].getDeleteAtCondition());
+    }
+    return deleteAts.join(' AND ');
   }
 
   getSelectSql() {
@@ -206,7 +248,7 @@ class JoinBuilder
         sql = condition;
       }
     });
-    return sql;
+    return (sql) ? sql + ' AND ' + this.whereRaw : this.whereRaw;
   }
 
   getCrudField(crud, field) {
