@@ -249,7 +249,15 @@ class JoinBuilder
         sql = condition;
       }
     });
-    return sql + (this.whereRaw ? ' AND ' + this.whereRaw : this.whereRaw);
+    if (sql) {
+      if (this.whereRaw) {
+        return sql + ' AND ' + this.whereRaw;
+      } else {
+        return sql;
+      }
+    } else {
+      return this.whereRaw;
+    }
   }
 
   getCrudField(crud, field) {
