@@ -76,11 +76,11 @@ class Crud
       idField  : this.options.idField,
       fields   : this.tableFields,
       where    : [[this.options.idField, id]],
-      whereRaw : this.addDeleteAtCondition(params.__whereRaw)
+      whereRaw : this.addDeleteAtCondition()
     };
   }
 
-  addDeleteAtCondition(whereRaw) {
+  addDeleteAtCondition(whereRaw = null) {
     if (this.options.useTimestamp) {
       return (whereRaw) ? whereRaw + ' AND ' + this.getDeleteAtCondition() : this.getDeleteAtCondition();
     } else {
