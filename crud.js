@@ -9,9 +9,10 @@ class Crud
   /**
    * markParams: array of array(0: field, 1: value, 2: operator?)
    */
-  constructor(tableName, tableFields, markParams = null, options = null) {
+  constructor(tableName, metadata, markParams = null, options = null) {
     this.tableName   = tableName;
-    this.tableFields = tableFields;
+    this.metadata    = metadata;
+    this.tableFields = Object.keys(metadata);
     this.markParams  = (markParams) ? markParams : [];
 
     if (!options) {

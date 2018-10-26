@@ -1,4 +1,4 @@
-require('dotenv').config()
+require('dotenv').config();
 
 var assert = require('assert');
 var expect = require('chai').expect;
@@ -8,10 +8,11 @@ const PgUtils          = require('../index')();
 const Crud             = require('../crud');
 const JoinBuilderClass = require('../join-builder');
 
+
 class Crud1 extends Crud
 {
-  constructor(tableFields, markRawParams, options = null) {
-    super('crud1', ['id', 'key', 'title'], null, null);
+  constructor() {
+    super('crud1', { id: '', key: '', title: '' });
   }
 
   getRelations() {
@@ -23,8 +24,8 @@ class Crud1 extends Crud
 
 class Crud2 extends Crud
 {
-  constructor(tableFields, markRawParams, options = null) {
-    super('crud2', ['id', 'key', 'title'], null, null);
+  constructor() {
+    super('crud2', { id: '', key: '', title: '' });
   }
 }
 

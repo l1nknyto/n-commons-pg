@@ -120,7 +120,7 @@ class JoinBuilder
     if (!this.crudTimestamp.length) {
       for (var key in this.withs) {
         var crud = this.withs[key].crud;
-        if (crud.options.useTimestamp) {
+        if (crud && crud.options.useTimestamp) {
           this.crudTimestamp.push(crud);
         }
       }
