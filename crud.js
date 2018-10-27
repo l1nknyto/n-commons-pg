@@ -180,6 +180,23 @@ class Crud
   getFieldAs(field, alias) {
     return alias + '.' + field + ' AS ' + alias + '__' + field;
   }
+
+  getChanges(oldValues, newValues) {
+    return this.updateValueChanges(oldValues, newValues, this.tableFields, {});
+  }
+
+  updateValueChanges(oldValues, newValues, keys, changes) {
+    keys.forEach((key) => {
+      this.updateValueChange(oldValues, newValues, key, changes);
+    });
+    return changes;
+  }
+
+  updateValueChange(oldValues, newValues, key, changes) {
+    if (typeof newValues[key] == 'undefined' && (oldValues[key] != newValues.label)) {
+      changes[key] = newValues[key];
+    }
+  }
 }
 
 module.exports = Crud;
