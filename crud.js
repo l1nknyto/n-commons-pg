@@ -1,3 +1,4 @@
+const _        = require('underscore');
 const PgUtils  = require('./index')(true);
 const NCommons = require('n-commons');
 const Logger   = require('n-commons/logger');
@@ -187,14 +188,14 @@ class Crud
 
   updateValueChanges(oldValues, newValues, keys, changes) {
     keys.forEach((key) => {
-      this.updateValueChange(oldValues, newValues, key, changes);
+      this.updateValueChange(oldValues[key], newValues[key], changes);
     });
     return changes;
   }
 
-  updateValueChange(oldValues, newValues, key, changes) {
-    if (typeof newValues[key] == 'undefined' && (oldValues[key] != newValues.label)) {
-      changes[key] = newValues[key];
+  updateValueChange(oldValue, newValue, changes) {
+    if (typeof oldValue == 'undefined' && !_.isEqual(oldValue, newValue)) {
+      changes[key] = newValue;
     }
   }
 }
