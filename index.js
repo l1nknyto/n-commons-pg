@@ -197,22 +197,6 @@ function createDeleteSql(sqlParams, tableName, options, data)
   return sql;
 }
 
-/**
- * BEGIN class PgTransaction
- */
-function PgTransaction() {
-  this.client = null
-  return this
-}
-
-PgTransaction.prototype.begin = function(dbConfig, callback) {
-  var client = new pg.Client(dbConfig)
-  client.connect((err) => {
-    if (err) return callback(err)
-    else beginTransaction(this, client, callback)
-  })
-}
-
 function beginTransaction(transaction, client, callback)
 {
   client.query('BEGIN', (err, result) => {
@@ -237,48 +221,6 @@ function runInDomain(transaction, client, callback)
     transaction.client = client;
     return callback(null, transaction);
   });
-}
-
-PgTransaction.prototype.execute = function(query, queryParams, callback) {
-  if (!this.client) return callback({ message:'No transaction.' });
-  this.client.query(query, queryParams, function(err, result) {
-    if (err) callback(err);
-    else if (result.rowCount == 0) return callback({ empty:true });
-    else return callback(null, result.rows);
-  });
-}
-
-PgTransaction.prototype.commit = function(callback) {
-  if (!this.client) return callback(null)
-  this.client.query('COMMIT', (err, result) => {
-    this.client.end()
-    return callback(err)
-  })
-}
-
-PgTransaction.prototype.rollback = function(callback) {
-  if (!this.client) return callback(null)
-  this.client.query('ROLLBACK', (err, result) => {
-    this.client.end()
-    return callback(err)
-  })
-}
-
-PgTransaction.prototype.end = function(err, callback) {
-  if (err) {
-    this.rollback(function() {
-      if (callback) return callback(err);
-    });
-  } else {
-    this.commit(function(err) {
-      if (callback) return callback(err);
-    });
-  }
-}
-
-function createTransaction()
-{
-  return new PgTransaction();
 }
 
 /*** End class PgTransaction ***/
@@ -343,11 +285,24 @@ function pgutils()
   function execute(query, params, callback)
   {
     if (!query) return callback(null, null);
-    config.pool.query(query, params, function(err, result) {
-      if (err) return handleError(err, query, params, callback);
-      else if (result.rowCount == 0) return callback({ empty:true });
-      else return callback(null, result.rows);
-    })
+    config.pool.query(query, params, getExecuteHandler(query, params, callback));
+  }
+
+  function getExecuteHandler(query, params, callback)
+  {
+    return function(err, result) {
+      if (err) {
+        if ('23505' == err.code) {
+          return callback({ duplicate: true });
+        } else {
+          return handleError(err, query, params, callback);
+        }
+      }
+      if (result.rowCount == 0) {
+        return callback({ empty: true });
+      }
+      return callback(null, result.rows);
+    };
   }
 
   function select(query, params, callback)
@@ -381,6 +336,58 @@ function pgutils()
       callback : arguments[2]
     };
     return {};
+  }
+
+  /** BEGIN class PgTransaction **/
+  function PgTransaction() {
+    this.client = null
+    return this
+  }
+
+  PgTransaction.prototype.begin = function(dbConfig, callback) {
+    var client = new pg.Client(dbConfig)
+    client.connect((err) => {
+      if (err) return callback(err)
+      else beginTransaction(this, client, callback)
+    })
+  }
+
+  PgTransaction.prototype.execute = function(query, params, callback) {
+    if (!this.client) return callback({ message:'No transaction.' });
+    this.client.query(query, params, getExecuteHandler(query, params, callback));
+  }
+
+  PgTransaction.prototype.commit = function(callback) {
+    if (!this.client) return callback(null)
+    this.client.query('COMMIT', (err, result) => {
+      this.client.end()
+      return callback(err)
+    })
+  }
+
+  PgTransaction.prototype.rollback = function(callback) {
+    if (!this.client) return callback(null)
+    this.client.query('ROLLBACK', (err, result) => {
+      this.client.end()
+      return callback(err)
+    })
+  }
+
+  PgTransaction.prototype.end = function(err, callback) {
+    if (err) {
+      this.rollback(function() {
+        if (callback) return callback(err);
+      });
+    } else {
+      this.commit(function(err) {
+        if (callback) return callback(err);
+      });
+    }
+  }
+
+  function createTransaction()
+  {
+    return new PgTransaction();
   }
 
   function beginTransaction_(callback)
