@@ -129,6 +129,14 @@ class Crud
     this.executeQuery(exec, query);
   }
 
+  updateChanges() {
+    var exec = PgUtils.getExecutorInfo(...arguments);
+    this.retrive(exec.params, NCommons.ok(exec.callback, (row) => {
+      this.removeUnchanges(row, exec.params);
+      this.update(exec.executor, exec.params, exec.callback);
+    }));
+  }
+
   createUpdateBindingOptions(params) {
     var options = this.createSelectBindingOptions(params);
     options.useReturning = (params.__useReturning) ? params.__useReturning : false;
@@ -182,21 +190,12 @@ class Crud
     return alias + '.' + field + ' AS ' + alias + '__' + field;
   }
 
-  getChanges(oldValues, newValues) {
-    return this.updateValueChanges(oldValues, newValues, this.tableFields, {});
-  }
-
-  updateValueChanges(oldValues, newValues, keys, changes) {
-    keys.forEach((key) => {
-      this.updateValueChange(oldValues[key], newValues[key], changes);
+  removeUnchanges(oldValues, newValues) {
+    this.tableFields.forEach((key) => {
+      if (typeof newValues[key] == 'undefined' || _.isEqual(oldValues[key], newValues[key])) {
+        delete newValues[key];
+      }
     });
-    return changes;
-  }
-
-  updateValueChange(oldValue, newValue, changes) {
-    if (typeof oldValue == 'undefined' && !_.isEqual(oldValue, newValue)) {
-      changes[key] = newValue;
-    }
   }
 }
 
