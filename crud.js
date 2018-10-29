@@ -61,8 +61,12 @@ class Crud
    * - { ...field:value...,  __fields, __where, __whereRaw }
    */
   retrive(id, callback) {
-    var options = (id === Object(id)) ? this.createSelectBindingOptions(id) : this.createDefaultSelectBindingOptions(id);
-    var query = PgUtils.getSelectSqlBindings(this.tableName, options);
+    var query;
+    if (id === Object(id)) {
+      query = PgUtils.getSelectSqlBindings(this.tableName, this.createSelectBindingOptions(id), id);
+    } else {
+      query = PgUtils.getSelectSqlBindings(this.tableName, this.createDefaultSelectBindingOptions(id));
+    }
     if (query && query.sql) {
       if (Logger.isDebug()) {
         Logger.debug(this.constructor.name + '.retrive', query);
@@ -192,7 +196,7 @@ class Crud
 
   removeUnchanges(oldValues, newValues) {
     this.tableFields.forEach((key) => {
-      if (typeof newValues[key] == 'undefined' || _.isEqual(oldValues[key], newValues[key])) {
+      if (key != this.options.idField && _.isEqual(oldValues[key], newValues[key])) {
         delete newValues[key];
       }
     });
