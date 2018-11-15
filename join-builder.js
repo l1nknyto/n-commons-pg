@@ -42,6 +42,7 @@ class JoinBuilder
     if (crud.options.useTimestamp) {
       this.crudTimestamp.push(crud);
     }
+    return this;
   }
 
   select(crud, field) {
