@@ -124,9 +124,9 @@ class Crud
     var options = this.createUpdateBindingOptions(exec.params);
     if (!this.isUpdateableParams(exec.params)) {
       if (options.useReturning) {
-        return this.retrive(...arguments);
+        return this.retrive(exec.params, exec.callback);
       } else {
-        return callback(null);
+        return exec.callback(null);
       }
     }
     if (this.options.useTimestamp) {
@@ -140,7 +140,7 @@ class Crud
   }
 
   isUpdateableParams(params) {
-    if (!params || !Object.keys(params).length) {
+    if (params && Object.keys(params).length) {
       for (var i = 0; i < this.tableFields.length; i++) {
         var key = this.tableFields[i];
         if (this.options.idField == key) continue;
@@ -148,7 +148,7 @@ class Crud
       }
       return false;
     } else {
-      return true;
+      return false;
     }
   }
 
