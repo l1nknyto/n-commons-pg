@@ -121,6 +121,9 @@ class Crud
 
   update() {
     var exec    = PgUtils.getExecutorInfo(...arguments);
+    if (!exec.params || !Object.keys(exec.params).length) {
+      return exec.callback(null);
+    }
     var options = this.createUpdateBindingOptions(exec.params);
     if (this.options.useTimestamp) {
       if (!options.valuesRaw) {
@@ -135,8 +138,8 @@ class Crud
   updateChanges() {
     var exec = PgUtils.getExecutorInfo(...arguments);
     this.retrive(exec.params, NCommons.ok(exec.callback, (row) => {
-      this.removeUnchanges(row, exec.params);
-      this.update(exec.executor, exec.params, exec.callback);
+      var params = crud.getChanges(row, exec.params);
+      this.update(exec.executor, params, exec.callback);
     }));
   }
 
@@ -197,19 +200,11 @@ class Crud
     var changes = {};
     this.tableFields.forEach((key) => {
       var value = newValues[key];
-      if (key == this.options.idField || (typeof value !== 'undefined' && NCommons.compare(oldValues[key], value))) {
+      if (typeof value !== 'undefined' && (key == this.options.idField || !NCommons.compare(oldValues[key], value))) {
         changes[key] = value;
       }
     });
     return changes;
-  }
-
-  removeUnchanges(oldValues, newValues) {
-    this.tableFields.forEach((key) => {
-      if (key != this.options.idField && NCommons.compare(oldValues[key], value)) {
-        delete newValues[key];
-      }
-    });
   }
 }
 
