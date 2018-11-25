@@ -1,4 +1,3 @@
-const _        = require('underscore');
 const PgUtils  = require('./index')(true);
 const NCommons = require('n-commons');
 const Logger   = require('n-commons/logger');
@@ -197,8 +196,9 @@ class Crud
   getChanges(oldValues, newValues) {
     var changes = {};
     this.tableFields.forEach((key) => {
-      if (typeof newValues[key] !== 'undefined' && !_.isEqual(oldValues[key], newValues[key])) {
-        changes[key] = newValues[key];
+      var value = newValues[key];
+      if (key == this.options.idField || (typeof value !== 'undefined' && NCommons.compare(oldValues[key], value))) {
+        changes[key] = value;
       }
     });
     return changes;
@@ -206,7 +206,7 @@ class Crud
 
   removeUnchanges(oldValues, newValues) {
     this.tableFields.forEach((key) => {
-      if (key != this.options.idField && _.isEqual(oldValues[key], newValues[key])) {
+      if (key != this.options.idField && NCommons.compare(oldValues[key], value)) {
         delete newValues[key];
       }
     });
