@@ -194,6 +194,16 @@ class Crud
     return alias + '.' + field + ' AS ' + alias + '__' + field;
   }
 
+  getChanges(oldValues, newValues) {
+    var changes = {};
+    this.tableFields.forEach((key) => {
+      if (typeof newValues[key] !== 'undefined' && !_.isEqual(oldValues[key], newValues[key])) {
+        changes[key] = newValues[key];
+      }
+    });
+    return changes;
+  }
+
   removeUnchanges(oldValues, newValues) {
     this.tableFields.forEach((key) => {
       if (key != this.options.idField && _.isEqual(oldValues[key], newValues[key])) {
