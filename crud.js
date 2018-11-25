@@ -120,11 +120,15 @@ class Crud
   }
 
   update() {
-    var exec    = PgUtils.getExecutorInfo(...arguments);
-    if (!exec.params || !Object.keys(exec.params).length) {
-      return exec.callback(null);
-    }
+    var exec = PgUtils.getExecutorInfo(...arguments);
     var options = this.createUpdateBindingOptions(exec.params);
+    if (!this.isUpdateableParams(exec.params)) {
+      if (options.useReturning) {
+        return this.retrive(...arguments);
+      } else {
+        return callback(null);
+      }
+    }
     if (this.options.useTimestamp) {
       if (!options.valuesRaw) {
         options.valuesRaw = [];
@@ -133,6 +137,19 @@ class Crud
     }
     var query = PgUtils.getUpdateSqlBindings(this.tableName, options, exec.params);
     this.executeQuery(exec, query);
+  }
+
+  isUpdateableParams(params) {
+    if (!params || !Object.keys(params).length) {
+      for (var i = 0; i < this.tableFields.length; i++) {
+        var key = this.tableFields[i];
+        if (this.options.idField == key) continue;
+        if (typeof params[key] !== 'undefined') return true;
+      }
+      return false;
+    } else {
+      return true;
+    }
   }
 
   updateChanges() {
