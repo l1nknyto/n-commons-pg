@@ -46,8 +46,8 @@ class Crud
       if (Logger.isDebug()) {
         Logger.debug(this.constructor.name + '.executeQuery', query);
       }
-      exec.executor.execute(query.sql, query.params, NCommons.ok(exec.callback, function(rows) {
-        return exec.callback(null, (rows) ? rows[0] : {});
+      exec.executor.execute(query.sql, query.params, NCommons.ok(exec.callback, function(rows, count) {
+        return exec.callback(null, (rows) ? rows[0] : {}, { count: count });
       }));
     } else {
       return exec.callback(null, {});

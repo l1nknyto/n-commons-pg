@@ -301,7 +301,7 @@ function pgutils()
       if (result.rowCount == 0) {
         return callback({ empty: true });
       }
-      return callback(null, result.rows);
+      return callback(null, result.rows, result.rowCount);
     };
   }
 
