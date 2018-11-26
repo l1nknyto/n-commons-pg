@@ -123,11 +123,7 @@ class Crud
     var exec = PgUtils.getExecutorInfo(...arguments);
     var options = this.createUpdateBindingOptions(exec.params);
     if (!this.isUpdateableParams(exec.params)) {
-      if (options.useReturning) {
-        return this.retrive(exec.params, exec.callback);
-      } else {
-        return exec.callback(null);
-      }
+      return exec.callback(null, {}, { count: 0 });
     }
     if (this.options.useTimestamp) {
       if (!options.valuesRaw) {
