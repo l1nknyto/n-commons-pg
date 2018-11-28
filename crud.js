@@ -1,15 +1,21 @@
 const PgUtils  = require('./index')(true);
 const NCommons = require('n-commons');
 const Logger   = require('n-commons/logger');
+const SelectBuilder = require('./builders/select-builder');
+const InsertBuilder = require('./builders/insert-builder');
+const UpdateBuilder = require('./builders/update-builder');
+const DeleteBuilder = require('./builders/delete-builder');
+const CrudInterface = require('./crud.interface');
 
 const DELETE_AT_CONDITION = 'deleted_at IS NULL';
 
-class Crud
+class Crud extends CrudInterface
 {
   /**
    * markParams: array of array(0: field, 1: value, 2: operator?)
    */
   constructor(tableName, metadata, markParams = null, options = null) {
+    super();
     this.tableName   = tableName;
     this.metadata    = metadata;
     this.tableFields = Object.keys(metadata);
@@ -31,14 +37,19 @@ class Crud
     }
   }
 
+  getDeleteAtCondition() {
+    return DELETE_AT_CONDITION;
+  }
+
   create() {
-    var exec    = PgUtils.getExecutorInfo(...arguments);
-    var dataRaw = [];
+    var exec = PgUtils.getExecutorInfo(...arguments);
+    var builder = new InsertBuilder();
+    builder.addTable(this);
+    builder.setTableData(this, exec.params);
     if (this.options.useTimestamp) {
-      dataRaw.push(['created_at', 'now()']);
+      builder.addRawValue('created_at', 'now()');
     }
-    var query = PgUtils.getInsertSqlBindings(this.tableName, this.tableFields, exec.params, dataRaw);
-    this.executeQuery(exec, query);
+    this.executeQuery(exec, builder.build());
   }
 
   executeQuery(exec, query) {
@@ -60,12 +71,10 @@ class Crud
    * - { ...field:value...,  __fields, __where, __whereRaw }
    */
   retrive(id, callback) {
-    var query;
-    if (id === Object(id)) {
-      query = PgUtils.getSelectSqlBindings(this.tableName, this.createSelectBindingOptions(id), id);
-    } else {
-      query = PgUtils.getSelectSqlBindings(this.tableName, this.createDefaultSelectBindingOptions(id));
-    }
+    var builder = new SelectBuilder();
+    builder.initQueryBuilder(builder, (id === Object(id)) ? id : { id: id });
+
+    var query = builder.build();
     if (query && query.sql) {
       if (Logger.isDebug()) {
         Logger.debug(this.constructor.name + '.retrive', query);
@@ -76,39 +85,20 @@ class Crud
     }
   }
 
-  createDefaultSelectBindingOptions(id) {
-    return {
-      idField  : this.options.idField,
-      fields   : this.tableFields,
-      where    : [[this.options.idField, id]],
-      whereRaw : this.addDeleteAtCondition()
-    };
-  }
-
-  addDeleteAtCondition(whereRaw = null) {
-    if (this.options.useTimestamp) {
-      return (whereRaw) ? whereRaw + ' AND ' + this.getDeleteAtCondition() : this.getDeleteAtCondition();
-    } else {
-      return whereRaw;
+  initQueryBuilder(builder, params) {
+    builder.addTable(this);
+    builder.setTableData(this, params);
+    if (params.__where && params.__where.length) {
+      params.__where.forEach((arr) => builder.addWhereArray(this, arr));
     }
-  }
-
-  getDeleteAtCondition() {
-    return DELETE_AT_CONDITION;
-  }
-
-  createSelectBindingOptions(params) {
-    return {
-      idField  : this.options.idField,
-      fields   : (params.__fields) ? params.__fields : this.tableFields,
-      where    : params.__where,
-      whereRaw : this.addDeleteAtCondition(params.__whereRaw)
-    };
+    builder.setWhereRaw(params.__whereRaw);
   }
 
   retriveAll(params, callback) {
-    var options = this.createSelectBindingOptions(params);
-    var query = PgUtils.getSelectSqlBindings(this.tableName, options);
+    var builder = new SelectBuilder();
+    this.initQueryBuilder(builder, params);
+
+    var query = builder.build();
     if (query && query.sql) {
       if (Logger.isDebug()) {
         Logger.debug(this.constructor.name + '.retriveAll', query);
@@ -121,18 +111,16 @@ class Crud
 
   update() {
     var exec = PgUtils.getExecutorInfo(...arguments);
-    var options = this.createUpdateBindingOptions(exec.params);
     if (!this.isUpdateableParams(exec.params)) {
       return exec.callback(null, {}, { count: 0 });
     }
+
+    var builder = new UpdateBuilder();
+    this.initUpdateBuilder(builder, exec.params);
     if (this.options.useTimestamp) {
-      if (!options.valuesRaw) {
-        options.valuesRaw = [];
-      }
-      options.valuesRaw.push(['updated_at', 'now()']);
+      builder.addRawValue('updated_at', 'now()');
     }
-    var query = PgUtils.getUpdateSqlBindings(this.tableName, options, exec.params);
-    this.executeQuery(exec, query);
+    this.executeQuery(exec, builder.build());
   }
 
   isUpdateableParams(params) {
@@ -156,57 +144,42 @@ class Crud
     }));
   }
 
-  createUpdateBindingOptions(params) {
-    var options = this.createSelectBindingOptions(params);
-    options.useReturning = (params.__useReturning) ? params.__useReturning : false;
-    options.valuesRaw    = (params.__valueRaw) ? params.__valueRaw : null;
-    return options;
+  initUpdateBuilder(builder, params) {
+    this.initQueryBuilder(builder, params);
+    builder.addRawValues(params.__valueRaw);
+    builder.useReturning((params.__useReturning) ? params.__useReturning : this.options.useReturning);
   }
 
   delete() {
-    var exec    = PgUtils.getExecutorInfo(...arguments);
-    var options = this.createUpdateBindingOptions(exec.params);
-    var query   = null;
-    if (this.options.useTimestamp && !exec.params.__noTimestamp) {
-      if (!options.valuesRaw) {
-        options.valuesRaw = [];
-      }
-      options.valuesRaw.push(['deleted_at', 'now()']);
-      query = PgUtils.getUpdateSqlBindings(this.tableName, options, exec.params);
+    var exec = PgUtils.getExecutorInfo(...arguments);
+    var builder = this.getDeleteBuilder(exec.params);
+    this.initUpdateBuilder(builder, exec.params);
+    this.executeQuery(exec, builder.build());
+  }
+
+  getDeleteBuilder(params) {
+    if (this.options.useTimestamp && !params.__noTimestamp) {
+      var builder = new UpdateBuilder();
+      builder.addRawValue('deleted_at', 'now()');
+      return builder;
     } else {
-      query = PgUtils.getDeleteSqlBindings(this.tableName, options, exec.params);
+      return new DeleteBuilder();
     }
-    this.executeQuery(exec, query);
   }
 
   mark() {
-    var exec    = PgUtils.getExecutorInfo(...arguments);
-    var options = this.createUpdateBindingOptions(exec.params);
-    if (options.valuesRaw) {
-      options.valuesRaw = options.valuesRaw.concat(this.markParams);
-    } else {
-      options.valuesRaw = this.markParams;
-    }
-    var query = PgUtils.getUpdateSqlBindings(this.tableName, options, exec.params);
-    this.executeQuery(exec, query);
+    var exec = PgUtils.getExecutorInfo(...arguments);
+    var builder = new UpdateBuilder();
+    this.initUpdateBuilder(builder, exec.params);
+    builder.addRawValues(this.markParams);
+    this.executeQuery(exec, builder.build());
   }
 
+  /**
+   * return [{ field, to, key }]
+   */
   getRelations() {
-    return null;
-  }
-
-  getField(field, alias = '') {
-    if (!field || this.tableFields.indexOf(field) == -1) return [];
-    if (!alias) return field;
-    if ('*' == field) {
-      return this.tableFields.map((item) => this.getFieldAs(item, alias));
-    } else {
-      return this.getFieldAs(field, alias);
-    }
-  }
-
-  getFieldAs(field, alias) {
-    return alias + '.' + field + ' AS ' + alias + '__' + field;
+    return [];
   }
 
   getChanges(oldValues, newValues) {
