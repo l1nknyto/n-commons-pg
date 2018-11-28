@@ -3,12 +3,13 @@ const QueryBuilder = require('./query-builder');
 
 // addUseTimestamp(table)
 // addNoTimestamp(table)
-// addSelect(crud, field)
-// addOrder(crud, field, direction = 'ASC')
+// addSelect(table, field)
+// addOrder(table, field, direction = 'ASC')
+// addOrders(table, arr)
 // setLimit(limit, offset = 0)
 // --- inherit
 // constructor()
-// addTable(crud|string, alias = '', join = 'JOIN', relations = [])
+// addTable(crud|{ sql, relations }, alias = '', join = 'JOIN', relations = [])
 // setTableData(table, data)
 // addWhere(table, field, value, operator = '=', conjuction = 'AND', rawValue = false)
 // addWhereArray(table, array)
@@ -59,6 +60,19 @@ class SelectBuilder extends QueryBuilder
       field     : field,
       direction : direction
     });
+    return this;
+  }
+
+  addOrders(table, arr) {
+    if (arr && arr.length) {
+      arr.forEach((order) => {
+        this.orders.push({
+          table     : table,
+          field     : order[0],
+          direction : (order[1]) ? order[1] : 'ASC'
+        });
+      });
+    }
     return this;
   }
 

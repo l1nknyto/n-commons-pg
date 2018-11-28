@@ -10,7 +10,7 @@ const QueryBuilder = require('./query-builder');
 // setLimit(limit, offset = 0)
 // --- inherit QueryBuilder
 // constructor()
-// addTable(crud|string, alias = '', join = 'JOIN', relations = [])
+// addTable(crud|{ sql, relations }, alias = '', join = 'JOIN', relations = [])
 // setTableData(table, data)
 // addWhere(table, field, value, operator = '=', conjuction = 'AND', rawValue = false)
 // addWhereArray(table, array)

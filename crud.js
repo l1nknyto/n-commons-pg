@@ -71,10 +71,8 @@ class Crud extends CrudInterface
    * - { ...field:value...,  __fields, __where, __whereRaw }
    */
   retrive(id, callback) {
-    var builder = new SelectBuilder();
-    builder.initQueryBuilder(builder, (id === Object(id)) ? id : { id: id });
-
-    var query = builder.build();
+    var builder = this.createSelectBuilder((id === Object(id)) ? id : { id: id });
+    var query   = builder.build();
     if (query && query.sql) {
       if (Logger.isDebug()) {
         Logger.debug(this.constructor.name + '.retrive', query);
@@ -83,6 +81,16 @@ class Crud extends CrudInterface
     } else {
       return callback(null, {});
     }
+  }
+
+  createSelectBuilder(params) {
+    var builder = new SelectBuilder();
+    this.initQueryBuilder(builder, params);
+    if (params.__noTimestamp) builder.addNoTimestamp(this);
+    if (params.__select)      builder.addSelect(this, params.__select);
+    if (params.__order)       builder.addOrders(this, params.__order);
+    if (params.__limit)       builder.setLimit(params.__limit[0], params.__limit[1]);
+    return builder;
   }
 
   initQueryBuilder(builder, params) {
@@ -95,10 +103,8 @@ class Crud extends CrudInterface
   }
 
   retriveAll(params, callback) {
-    var builder = new SelectBuilder();
-    this.initQueryBuilder(builder, params);
-
-    var query = builder.build();
+    var builder = this.createSelectBuilder(params);
+    var query   = builder.build();
     if (query && query.sql) {
       if (Logger.isDebug()) {
         Logger.debug(this.constructor.name + '.retriveAll', query);
