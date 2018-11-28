@@ -52,7 +52,7 @@ class QueryBuilder
   }
 
   addWhereArray(table, arr) {
-    return addWhere(table, arr[0], arr[1], arr[2], arr[3], arr[4]);
+    return this.addWhere(table, arr[0], arr[1], arr[2], arr[3], arr[4]);
   }
 
   setWhereRaw(value) {
