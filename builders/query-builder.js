@@ -92,7 +92,7 @@ class QueryBuilder
     this.wheres.forEach((item) => {
       var field = (item.table) ? this.getTableField(item.table, item.field) : item.field;
       var condition = (item.rawValue)
-        ? field + item.operator + item.value
+        ? field + ' ' + item.operator + ' ' + item.value
         : this.createCondition(field, item.value, item.operator);
       sql = this.appendCondition(sql, condition, item.conjuction);
     });

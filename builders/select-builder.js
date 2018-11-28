@@ -195,13 +195,13 @@ class SelectBuilder extends QueryBuilder
   }
 
   getWhereSql() {
-    var sql = super.getWhereSql();
     var tables = this.getTableWithTimestamp();
-    if (tables.length) {
-      var deleteAtSql = this.getDeleteAtConditions(tables);
-      sql = (sql) ? sql + ' AND ' + deleteAtSql : ' WHERE ' + deleteAtSql;
+    if (tables && tables.length) {
+      tables.forEach((table) => {
+        this.addWhere(table, 'deleted_at', 'NULL', 'IS', null, true);
+      });
     }
-    return sql;
+    return super.getWhereSql();
   }
 
   getTableWithTimestamp() {
@@ -213,12 +213,6 @@ class SelectBuilder extends QueryBuilder
       });
     }
     return this.tableWithTimestamp;
-  }
-
-  getDeleteAtConditions(tables) {
-    return tables.map((table) => {
-      return this.tables.get(table).alias + '.' + table.getDeleteAtCondition();
-    }).join(' AND ');
   }
 
   getOrderSql() {

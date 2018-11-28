@@ -35,7 +35,7 @@ it('test build using where from table', function() {
   builder.setWhereRaw('where-raw');
   var results = builder.build();
 
-  expect(results.sql).to.equal('core-test WHERE where-raw AND C.id=$1 OR C.key=$2 AND C.title=should-be-escaped AND now()=now()');
+  expect(results.sql).to.equal('core-test WHERE where-raw AND C.id=$1 OR C.key=$2 AND C.title = should-be-escaped AND now() = now()');
   expect(results.params).to.have.lengthOf(2);
   expect(results.params).to.deep.equal(['value 1', 'value 2']);
 });
