@@ -45,7 +45,7 @@ it('test build full select feature', function() {
 
   var results = builder.build();
   var expectedSql = 'SELECT C1.id as C1__id, C1.key as C1__key, C1.title as C1__title, C2.id as C2__id, C2.key as C2__key, C2.title as C2__title' +
-    ' FROM table1 C1 JOIN table2 C2 ON C2.key=C1.id WHERE C1.id=$1 AND C2.key=$2 AND C1.deleted_at IS NULL' +
+    ' FROM table1 C1 JOIN table2 C2 ON C1.key=C2.id WHERE C1.id=$1 AND C2.key=$2 AND C1.deleted_at IS NULL' +
     ' ORDER BY C1.id ASC, C2.key ASC LIMIT 10 OFFSET 20';
   expect(results.sql).to.equal(expectedSql);
   expect(results.params).to.have.lengthOf(2);
@@ -58,7 +58,7 @@ it('test build select using subquery', function() {
   var table1  = new TestCrud1();
   var table2  = {
     sql       : 'SELECT 1 as key',
-    relations : [{ field: 'key', to: TestCrud1, key: 'id'}]
+    relations : [{ field: 'id', to: TestCrud1, key: 'key'}]
   };
 
   builder.addTable(table1, 'c1').addTable(table2, 'c2');
@@ -68,7 +68,7 @@ it('test build select using subquery', function() {
 
   var results = builder.build();
   var expectedSql = 'SELECT C1.id as C1__id, C1.key as C1__key, C1.title as C1__title, C2.*' +
-    ' FROM table1 C1 JOIN (SELECT 1 as key) C2 ON C2.key=C1.id WHERE C1.id=$1 AND C2.key=$2 AND C1.deleted_at IS NULL';
+    ' FROM (SELECT 1 as key) C2 JOIN table1 C1 ON C2.id=C1.key WHERE C1.id=$1 AND C2.key=$2 AND C1.deleted_at IS NULL';
   expect(results.sql).to.equal(expectedSql);
   expect(results.params).to.have.lengthOf(2);
   expect(results.params).to.deep.equal(['value 1', 'value 2']);
@@ -87,6 +87,22 @@ it('test build select using subquery - override relations', function() {
 
   var results = builder.build();
   var expectedSql = 'SELECT C1.id as C1__id FROM table1 C1 JOIN (SELECT 1 as key) C2 ON C1.key=C2.id WHERE C1.deleted_at IS NULL';
+  expect(results.sql).to.equal(expectedSql);
+});
+
+
+it('test build select using subquery - no relation', function() {
+  var builder = new SelectBuilder();
+  var table1  = new TestCrud1();
+  var table2  = {
+    sql : 'SELECT 1 as key'
+  };
+
+  builder.addTable(table1, 'c1').addTable(table2, 'c2');
+  builder.addSelect(table1, 'id');
+
+  var results = builder.build();
+  var expectedSql = 'SELECT C1.id as C1__id FROM table1 C1,(SELECT 1 as key) C2 WHERE C1.deleted_at IS NULL';
   expect(results.sql).to.equal(expectedSql);
 });
 

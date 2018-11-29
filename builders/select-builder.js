@@ -136,30 +136,55 @@ class SelectBuilder extends QueryBuilder
   }
 
   getFromSql() {
-    var from = '';
-    this.tables.forEach((value, key) => {
-      var tableAlias = (key instanceof Crud)
-        ? this.getTableName(key)
-        : '(' + key.sql + ') ' + value.alias;
-      if (from) {
-        from += ' ' + value.join + ' ' + tableAlias + this.getTableRelation(key);
-      } else {
-        from = tableAlias;
+    var table;
+    var tableHasRelation =[], tableJoineds = [], tableRelations = [];
+    var itr = this.tables.keys();
+    while(table = itr.next().value) {
+      this._addTableRelation(table, tableHasRelation, tableJoineds, tableRelations);
+    }
+
+    var from = [];
+    this.tables.forEach((info, table) => {
+      if (tableHasRelation.indexOf(table) == -1) {
+        var tableAlias = (table instanceof Crud)
+          ? this.getTableName(table) : '(' + table.sql + ') ' + info.alias;
+        from.push(tableAlias);
       }
     });
-    return from;
-  }
 
-  getTableRelation(table) {
-    var relations = '';
-    this.tables.forEach((value, key) => {
-      if (table != key) {
-        if (!(relations = this._getTableRelation(table, key))) {
-          relations = this._getTableRelation(key, table);
+    for (var i = 0; i < tableJoineds.length; i++) {
+      var sqlTableJoin = [];
+      for (var j = 0; j < tableJoineds[i].length; j++) {
+        var tableJoin  = tableJoineds[i][j];
+        var relation   = tableRelations[i][j];
+        var info       = this.tables.get(tableJoin);
+        var tableAlias = (tableJoin instanceof Crud)
+          ? this.getTableName(tableJoin) : '(' + tableJoin.sql + ') ' + info.alias;
+        if (relation) {
+          sqlTableJoin.push(info.join + ' ' + tableAlias + relation);
+        } else {
+          sqlTableJoin.push(tableAlias);
         }
       }
-    });
-    return relations;
+      from.push(sqlTableJoin.join(' '));
+    }
+    return from.join(',');
+  }
+
+  _addTableRelation(table, tableHasRelation, tableJoineds, tableRelations) {
+    var otherTable;
+    var itr = this.tables.keys();
+    while(otherTable = itr.next().value) {
+      if (table == otherTable) continue;
+      if (this._inTableJoined(table, tableJoineds) != -1) continue;
+
+      var relation;
+      if (relation = this._getTableRelation(table, otherTable)) {
+        this._addTableJoined(table, otherTable, relation, tableHasRelation, tableJoineds, tableRelations);
+      } else if (relation = this._getTableRelation(otherTable, table)) {
+        this._addTableJoined(otherTable, table, relation, tableHasRelation, tableJoineds, tableRelations);
+      }
+    }
   }
 
   _getTableRelation(table1, table2) {
@@ -170,7 +195,7 @@ class SelectBuilder extends QueryBuilder
     for (var i = 0; i < relations.length; i++) {
       var relation = relations[i];
       if ((typeof relation.to === 'function' && table2 instanceof relation.to) || table2 == relation.to) {
-        return this.getRelationCondition(relation, info1, info2);
+        return this._getRelationCondition(relation, info1, info2);
       }
     }
     return '';
@@ -188,10 +213,42 @@ class SelectBuilder extends QueryBuilder
     }
   }
 
-  getRelationCondition(relation, info1, info2) {
+  _getRelationCondition(relation, info1, info2) {
     var key1 = info1.alias + '.' + relation.field;
     var key2 = info2.alias + '.' + relation.key;
     return ' ON ' + key1 + '=' + key2;
+  }
+
+  _inTableJoined(table, tableJoineds) {
+    for (var i = 0; i < tableJoineds.length; i++) {
+      var index = tableJoineds[i].indexOf(table);
+      if (index != -1) return i;
+    }
+    return -1;
+  }
+
+  _addTableJoined(table, otherTable, relation, tableHasRelation, tableJoineds, tableRelations) {
+    var joineds, relations;
+    var i = this._inTableJoined(table, tableJoineds);
+    if (i != -1) {
+      joineds   = tableJoineds[i];
+      relations = tableRelations[i];
+    } else {
+      var j = this._inTableJoined(otherTable, tableJoineds);
+      if (j != -1) {
+        joineds   = tableJoineds[j];
+        relations = tableRelations[j];
+      } else {
+        tableJoineds.push(joineds = [table]);
+        tableRelations.push(relations = ['']);
+      }
+    }
+
+    joineds.push(otherTable);
+    relations.push(relation);
+
+    if (tableHasRelation.indexOf(table) == -1) tableHasRelation.push(table);
+    if (tableHasRelation.indexOf(otherTable) == -1) tableHasRelation.push(otherTable);
   }
 
   getWhereSql() {
