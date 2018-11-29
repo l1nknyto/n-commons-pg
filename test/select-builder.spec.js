@@ -45,7 +45,7 @@ it('test build full select feature', function() {
 
   var results = builder.build();
   var expectedSql = 'SELECT C1.id as C1__id, C1.key as C1__key, C1.title as C1__title, C2.id as C2__id, C2.key as C2__key, C2.title as C2__title' +
-    ' FROM table1 C1 JOIN table2 C2 ON C1.key=C2.id WHERE C1.id=$1 AND C2.key=$2 AND C1.deleted_at IS NULL' +
+    ' FROM table2 C2 JOIN table1 C1 ON C1.key=C2.id WHERE C1.id=$1 AND C2.key=$2 AND C1.deleted_at IS NULL' +
     ' ORDER BY C1.id ASC, C2.key ASC LIMIT 10 OFFSET 20';
   expect(results.sql).to.equal(expectedSql);
   expect(results.params).to.have.lengthOf(2);
@@ -68,7 +68,7 @@ it('test build select using subquery', function() {
 
   var results = builder.build();
   var expectedSql = 'SELECT C1.id as C1__id, C1.key as C1__key, C1.title as C1__title, C2.*' +
-    ' FROM (SELECT 1 as key) C2 JOIN table1 C1 ON C2.id=C1.key WHERE C1.id=$1 AND C2.key=$2 AND C1.deleted_at IS NULL';
+    ' FROM table1 C1 JOIN (SELECT 1 as key) C2 ON C2.id=C1.key WHERE C1.id=$1 AND C2.key=$2 AND C1.deleted_at IS NULL';
   expect(results.sql).to.equal(expectedSql);
   expect(results.params).to.have.lengthOf(2);
   expect(results.params).to.deep.equal(['value 1', 'value 2']);
@@ -86,7 +86,7 @@ it('test build select using subquery - override relations', function() {
   builder.addSelect(table1, 'id');
 
   var results = builder.build();
-  var expectedSql = 'SELECT C1.id as C1__id FROM table1 C1 JOIN (SELECT 1 as key) C2 ON C1.key=C2.id WHERE C1.deleted_at IS NULL';
+  var expectedSql = 'SELECT C1.id as C1__id FROM (SELECT 1 as key) C2 null table1 C1 ON C1.key=C2.id WHERE C1.deleted_at IS NULL';
   expect(results.sql).to.equal(expectedSql);
 });
 

@@ -180,9 +180,9 @@ class SelectBuilder extends QueryBuilder
 
       var relation;
       if (relation = this._getTableRelation(table, otherTable)) {
-        this._addTableJoined(table, otherTable, relation, tableHasRelation, tableJoineds, tableRelations);
-      } else if (relation = this._getTableRelation(otherTable, table)) {
         this._addTableJoined(otherTable, table, relation, tableHasRelation, tableJoineds, tableRelations);
+      } else if (relation = this._getTableRelation(otherTable, table)) {
+        this._addTableJoined(table, otherTable, relation, tableHasRelation, tableJoineds, tableRelations);
       }
     }
   }
