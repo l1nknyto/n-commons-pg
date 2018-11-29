@@ -176,7 +176,7 @@ class SelectBuilder extends QueryBuilder
     var itr = this.tables.keys();
     while(otherTable = itr.next().value) {
       if (table == otherTable) continue;
-      if (this._inTableJoined(table, tableJoineds) != -1) continue;
+      if (this._inTableJoined(otherTable, tableJoineds) != -1) continue;
 
       var relation;
       if (relation = this._getTableRelation(table, otherTable)) {
@@ -228,24 +228,20 @@ class SelectBuilder extends QueryBuilder
   }
 
   _addTableJoined(table, otherTable, relation, tableHasRelation, tableJoineds, tableRelations) {
-    var joineds, relations;
     var i = this._inTableJoined(table, tableJoineds);
     if (i != -1) {
-      joineds   = tableJoineds[i];
-      relations = tableRelations[i];
+      tableJoineds[i].push(otherTable);
+      tableRelations[i].push(relation);
     } else {
       var j = this._inTableJoined(otherTable, tableJoineds);
       if (j != -1) {
-        joineds   = tableJoineds[j];
-        relations = tableRelations[j];
+        tableJoineds[j].push(table);
+        tableRelations[j].push(relation);
       } else {
-        tableJoineds.push(joineds = [table]);
-        tableRelations.push(relations = ['']);
+        tableJoineds.push([table, otherTable]);
+        tableRelations.push(['', relation]);
       }
     }
-
-    joineds.push(otherTable);
-    relations.push(relation);
 
     if (tableHasRelation.indexOf(table) == -1) tableHasRelation.push(table);
     if (tableHasRelation.indexOf(otherTable) == -1) tableHasRelation.push(otherTable);
