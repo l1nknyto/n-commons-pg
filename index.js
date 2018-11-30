@@ -141,37 +141,41 @@ function pgutils()
 
   /** BEGIN class PgTransaction **/
   function PgTransaction() {
-    this.client = null
-    return this
+    this.client = null;
+    return this;
   }
 
   PgTransaction.prototype.begin = function(dbConfig, callback) {
-    var client = new pg.Client(dbConfig)
+    var client = new pg.Client(dbConfig);
     client.connect((err) => {
-      if (err) return callback(err)
-      else beginTransaction(this, client, callback)
+      if (err) return callback(err);
+      else beginTransaction(this, client, callback);
     })
   }
 
   PgTransaction.prototype.execute = function(query, params, callback) {
-    if (!this.client) return callback({ message:'No transaction.' });
+    if (!this.client) return callback({ message: 'Transaction terminated' });
     this.client.query(query, params, getExecuteHandler(query, params, callback));
   }
 
   PgTransaction.prototype.commit = function(callback) {
-    if (!this.client) return callback(null)
+    if (!this.client) return callback({ message: 'Transaction terminated' });
     this.client.query('COMMIT', (err, result) => {
-      this.client.end()
-      return callback(err)
-    })
+      this.endClient(callback);
+    });
   }
 
   PgTransaction.prototype.rollback = function(callback) {
-    if (!this.client) return callback(null)
+    if (!this.client) return callback({ message: 'Transaction terminated' });
     this.client.query('ROLLBACK', (err, result) => {
-      this.client.end()
-      return callback(err)
+      this.endClient(callback);
     })
+  }
+
+  PgTransaction.prototype.endClient = function(callback) {
+    this.client.end();
+    this.client = null;
+    return callback(err);
   }
 
   PgTransaction.prototype.end = function(err, callback) {
@@ -201,15 +205,11 @@ function pgutils()
   function runTransaction(next, callback)
   {
     return beginTransaction_(function(err, transaction) {
-      if (err) {
-        return callback(err);
-      }
+      if (err) return callback(err);
       next(function(err) {
         var prevArguments = arguments;
         transaction.end(err, function(e) {
-          if (e) {
-            return callback(err);
-          }
+          if (e) return callback(err);
           return callback(...prevArguments);
         });
       }, transaction);
