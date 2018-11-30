@@ -15,7 +15,7 @@ class QueryBuilder
     this.wheres    = [];
     this.params    = [];
     this.options   = {
-      useReturning : false
+      useReturning : null
     };
   }
 
@@ -66,13 +66,19 @@ class QueryBuilder
   }
 
   build() {
-    var sql = this._buildSql() + (this.options.useReturning ? ' RETURNING *': '');
+    var sql = this._buildSql() + this.getReturning();
     var results = {
       sql    : sql,
       params : this.params
     };
     this.params = [];
     return results;
+  }
+
+  getReturning() {
+    var useReturning = (this.options.useReturning != null)
+      ? this.options.useReturning : this.getFirstTable().options.useReturning;
+    return (useReturning) ? ' RETURNING *': '';
   }
 
   _buildSql() {
@@ -131,8 +137,12 @@ class QueryBuilder
     return (alias) ? table.tableName + ' ' + alias : table.tableName;
   }
 
+  getFirstTable() {
+    return this.tables.keys().next().value;
+  }
+
   getFirstTableName() {
-    return this.getTableName(this.tables.keys().next().value);
+    return this.getTableName(this.getFirstTable());
   }
 }
 

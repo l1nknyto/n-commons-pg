@@ -84,6 +84,10 @@ class SelectBuilder extends QueryBuilder
     return this;
   }
 
+  getReturning() {
+    return '';
+  }
+
   _buildSql() {
     return this.getCoreSql() + this.getWhereSql() + this.getOrderSql() + this.getLimitSql();
   }

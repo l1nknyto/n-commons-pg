@@ -10,7 +10,7 @@ const Crud        = require('../crud');
 class TestCrud extends Crud
 {
   constructor() {
-    super('table1', { id: '', key: '', title: '' }, null, { useTimestamp: true });
+    super('table1', { id: '', key: '', title: '' }, null, { useTimestamp: true, useReturning: false });
   }
 
   getRelations() {

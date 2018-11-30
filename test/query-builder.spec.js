@@ -17,7 +17,7 @@ class TestBuilder extends BuilderClass
 class TestCrud extends Crud
 {
   constructor() {
-    super('crud1', { id: '', key: '', title: '' });
+    super('crud1', { id: '', key: '', title: '' }, null, { useReturning: false });
   }
 }
 
