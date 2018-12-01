@@ -160,19 +160,19 @@ function pgutils()
 
   PgTransaction.prototype.commit = function(callback) {
     if (!this.client) return callback({ message: 'Transaction terminated' });
-    this.client.query('COMMIT', (err, result) => {
-      this.endClient(callback);
+    this.client.query('COMMIT', (err) => {
+      this.endClient(err, callback);
     });
   }
 
   PgTransaction.prototype.rollback = function(callback) {
     if (!this.client) return callback({ message: 'Transaction terminated' });
-    this.client.query('ROLLBACK', (err, result) => {
-      this.endClient(callback);
+    this.client.query('ROLLBACK', (err) => {
+      this.endClient(err, callback);
     })
   }
 
-  PgTransaction.prototype.endClient = function(callback) {
+  PgTransaction.prototype.endClient = function(err, callback) {
     this.client.end();
     this.client = null;
     return callback(err);

@@ -145,7 +145,7 @@ class Crud extends CrudInterface
   updateChanges() {
     var exec = PgUtils.getExecutorInfo(...arguments);
     this.retrive(exec.params, NCommons.ok(exec.callback, (row) => {
-      var params = crud.getChanges(row, exec.params);
+      var params = this.getChanges(row, exec.params);
       this.update(exec.executor, params, NCommons.ok(exec.callback, (row, extra) => {
         extra.params = params;
         return exec.callback(null, row, extra);
