@@ -4,27 +4,25 @@ const Pool   = require('pg-pool');
 
 function beginTransaction(transaction, client, callback)
 {
-  client.query('BEGIN', (err, result) => {
+  runQueryInDomain(client, 'BEGIN', null, (err) => {
     if (err) {
-      client.end();
+      if (transaction.client) client.end();
       return callback(err);
+    } else {
+      transaction.client = client;
+      return callback(null, transaction);
     }
-    runInDomain(transaction, client, callback);
   });
 }
 
-function runInDomain(transaction, client, callback)
+function runQueryInDomain(client, query, params, callback)
 {
-  var outerDomain = process.domain;
   var d = domain.create();
   d.on('error', (err) => {
-    client.end();
-    if (outerDomain) outerDomain.emit('error', err);
-    if (!transaction.client) return callback(err);
+    return callback(err);
   })
   d.run(() => {
-    transaction.client = client;
-    return callback(null, transaction);
+    client.query(query, params, callback);
   });
 }
 
@@ -85,8 +83,11 @@ function pgutils()
 
   function execute(query, params, callback)
   {
-    if (!query) return callback(null, null);
-    config.pool.query(query, params, getExecuteHandler(query, params, callback));
+    if (!query) {
+      return callback(null, null);
+    } else {
+      runQueryInDomain(config.pool, query, params, getExecuteHandler(query, params, callback));
+    }
   }
 
   function getExecuteHandler(query, params, callback)
@@ -108,12 +109,15 @@ function pgutils()
 
   function select(query, params, callback)
   {
-    if (!query) return callback(null, null);
-    config.pool.query(query, params, function(err, result) {
-      if (err) return handleError(err, query, params, callback);
-      else if (result.rows.length == 0) return callback({ empty:true });
-      else return callback(null, result.rows);
-    })
+    if (!query) {
+      return callback(null, null);
+    } else {
+      runQueryInDomain(config.pool, query, params, function(err, result) {
+        if (err) return handleError(err, query, params, callback);
+        else if (result.rows.length == 0) return callback({ empty:true });
+        else return callback(null, result.rows);
+      });
+    }
   }
 
   function selectOne(query, params, callback)
@@ -132,7 +136,7 @@ function pgutils()
       callback : arguments[1]
     };
     if (arguments.length == 3) return {
-      executor : (arguments[0]) ? arguments[0] : self,
+      executor : arguments[0],
       params   : arguments[1],
       callback : arguments[2]
     };
@@ -154,22 +158,31 @@ function pgutils()
   }
 
   PgTransaction.prototype.execute = function(query, params, callback) {
-    if (!this.client) return callback({ message: 'Transaction terminated' });
-    this.client.query(query, params, getExecuteHandler(query, params, callback));
+    if (!this.client) {
+      return callback({ message: 'Transaction terminated' });
+    } else {
+      runQueryInDomain(this.client, query, params, getExecuteHandler(query, params, callback));
+    }
   }
 
   PgTransaction.prototype.commit = function(callback) {
-    if (!this.client) return callback({ message: 'Transaction terminated' });
-    this.client.query('COMMIT', (err) => {
-      this.endClient(err, callback);
-    });
+    if (!this.client) {
+      return callback({ message: 'Transaction terminated' });
+    } else {
+      runQueryInDomain(this.client, 'COMMIT', null, (err) => {
+        this.endClient(err, callback);
+      });
+    }
   }
 
   PgTransaction.prototype.rollback = function(callback) {
-    if (!this.client) return callback({ message: 'Transaction terminated' });
-    this.client.query('ROLLBACK', (err) => {
-      this.endClient(err, callback);
-    })
+    if (!this.client) {
+      return callback({ message: 'Transaction terminated' });
+    } else {
+      runQueryInDomain(this.client, 'ROLLBACK', null, (err) => {
+        this.endClient(err, callback);
+      });
+    }
   }
 
   PgTransaction.prototype.endClient = function(err, callback) {
