@@ -132,7 +132,7 @@ function pgutils()
       callback : arguments[1]
     };
     if (arguments.length == 3) return {
-      executor : arguments[0],
+      executor : (arguments[0]) ? arguments[0] : self,
       params   : arguments[1],
       callback : arguments[2]
     };
