@@ -1,6 +1,7 @@
-const PgUtils  = require('./index')(true);
-const NCommons = require('n-commons');
-const Logger   = require('n-commons/logger');
+const _             = require('underscore');
+const PgUtils       = require('./index')();
+const NCommons      = require('n-commons');
+const Logger        = require('n-commons/logger');
 const SelectBuilder = require('./builders/select-builder');
 const InsertBuilder = require('./builders/insert-builder');
 const UpdateBuilder = require('./builders/update-builder');
@@ -43,6 +44,10 @@ class Crud extends CrudInterface
 
   create() {
     var exec = PgUtils.getExecutorInfo(...arguments);
+    if (!this.isInsertableParams(exec.params)) {
+      return exec.callback(null, {}, { count: 0 });
+    }
+
     var builder = new InsertBuilder();
     builder.addTable(this);
     builder.setTableData(this, exec.params);
@@ -50,6 +55,16 @@ class Crud extends CrudInterface
       builder.addRawValue('created_at', 'now()');
     }
     this.executeQuery(exec, builder.build());
+  }
+
+  isInsertableParams(params) {
+    if (!_.isEmpty(params)) {
+      for (var i = 0; i < this.tableFields.length; i++) {
+        var key = this.tableFields[i];
+        if (typeof params[key] !== 'undefined') return true;
+      }
+    }
+    return false;
   }
 
   executeQuery(exec, query) {
@@ -130,16 +145,14 @@ class Crud extends CrudInterface
   }
 
   isUpdateableParams(params) {
-    if (params && Object.keys(params).length) {
+    if (!_.isEmpty(params)) {
       for (var i = 0; i < this.tableFields.length; i++) {
         var key = this.tableFields[i];
         if (this.options.idField == key) continue;
         if (typeof params[key] !== 'undefined') return true;
       }
-      return false;
-    } else {
-      return false;
     }
+    return false;
   }
 
   updateChanges() {
@@ -200,6 +213,18 @@ class Crud extends CrudInterface
       }
     });
     return changes;
+  }
+
+  getFieldValue(newValues, useIdField = true) {
+    var results = {};
+    this.tableFields.forEach((key) => {
+      var value = newValues[key];
+      var isKey = (key == this.options.idField);
+      if (typeof value !== 'undefined' && !isKey || (isKey && useIdField)) {
+        results[key] = value;
+      }
+    });
+    return results;
   }
 }
 

@@ -1,3 +1,4 @@
+const _            = require('underscore');
 const Crud         = require('../crud.interface');
 const QueryBuilder = require('./query-builder');
 
@@ -198,7 +199,8 @@ class SelectBuilder extends QueryBuilder
     var relations = this._getExpectedTableRelation(table1, info1);
     for (var i = 0; i < relations.length; i++) {
       var relation = relations[i];
-      if ((typeof relation.to === 'function' && table2 instanceof relation.to) || table2 == relation.to) {
+      if ((_.isFunction(relation.to) && table2 instanceof relation.to)
+          || table2 == relation.to) {
         return this._getRelationCondition(relation, info1, info2);
       }
     }
