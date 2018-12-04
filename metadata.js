@@ -35,17 +35,23 @@ class Metadata
     return this.data.database.type.startsWith('json');
   }
 
+  isText() {
+    return ('text' == this.data.database.type);
+  }
+
   fixValue(value) {
     if (value === null || typeof value === 'undefined') {
       return value;
     } else if (this.isNumber()) {
-      return (_.isNumber(value) && ! isNaN(value)) ? value : 0;
+      return (value) ? value : 0;
     } else if (this.isArray()) {
       return (_.isArray(value)) ? value : [];
     } else if (this.isJson()) {
       return (_.isObject(value)) ? value : {};
-    } else {
+    } else if (this.isText()) {
       return value;
+    } else {
+      return (value) ? value : null;
     }
   }
 }
