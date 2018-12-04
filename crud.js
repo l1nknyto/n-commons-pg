@@ -8,8 +8,6 @@ const UpdateBuilder = require('./builders/update-builder');
 const DeleteBuilder = require('./builders/delete-builder');
 const CrudInterface = require('./crud.interface');
 
-const DELETE_AT_CONDITION = 'deleted_at IS NULL';
-
 class Crud extends CrudInterface
 {
   /**
@@ -38,12 +36,31 @@ class Crud extends CrudInterface
     }
   }
 
-  getDeleteAtCondition() {
-    return DELETE_AT_CONDITION;
+  getViewMetadata(list) {
+    var results = {};
+    Object.keys(this.metadata).forEach((key) => {
+      if (!list || (list.indexOf(key) != -1) ) {
+        results[key] = this.metadata[key].getViewInfo();
+      }
+    });
+    return results;
+  }
+
+  beforeCUD(args) {
+    var exec = PgUtils.getExecutorInfo(...args);
+    if (exec.params) {
+      Object.keys(exec.params).forEach((key) => {
+        var metadata = this.metadata[key];
+        if (metadata) {
+          exec.params[key] = metadata.fixValue(exec.params[key]);
+        }
+      });
+    }
+    return exec;
   }
 
   create() {
-    var exec = PgUtils.getExecutorInfo(...arguments);
+    var exec = this.beforeCUD(arguments);
     if (!this.isInsertableParams(exec.params)) {
       return exec.callback(null, {}, { count: 0 });
     }
@@ -131,7 +148,7 @@ class Crud extends CrudInterface
   }
 
   update() {
-    var exec = PgUtils.getExecutorInfo(...arguments);
+    var exec = this.beforeCUD(arguments);
     if (!this.isUpdateableParams(exec.params)) {
       return exec.callback(null, {}, { count: 0 });
     }
@@ -156,7 +173,7 @@ class Crud extends CrudInterface
   }
 
   updateChanges() {
-    var exec = PgUtils.getExecutorInfo(...arguments);
+    var exec = this.beforeCUD(arguments);
     this.retrive(exec.params, NCommons.ok(exec.callback, (row) => {
       var params = this.getChanges(row, exec.params);
       this.update(exec.executor, params, NCommons.ok(exec.callback, (row, extra) => {
@@ -173,7 +190,7 @@ class Crud extends CrudInterface
   }
 
   delete() {
-    var exec = PgUtils.getExecutorInfo(...arguments);
+    var exec = this.beforeCUD(arguments);
     var builder = this.getDeleteBuilder(exec.params);
     this.initUpdateBuilder(builder, exec.params);
     this.executeQuery(exec, builder.build());
@@ -190,7 +207,7 @@ class Crud extends CrudInterface
   }
 
   mark() {
-    var exec = PgUtils.getExecutorInfo(...arguments);
+    var exec = this.beforeCUD(arguments);
     var builder = new UpdateBuilder();
     this.initUpdateBuilder(builder, exec.params);
     builder.addRawValues(this.markParams);
