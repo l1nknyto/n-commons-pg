@@ -42,8 +42,6 @@ class Metadata
   fixValue(value) {
     if (value === null || typeof value === 'undefined') {
       return value;
-    } else if (this.isNumber()) {
-      return (value) ? value : 0;
     } else if (this.isArray()) {
       return (_.isArray(value)) ? value : [];
     } else if (this.isJson()) {
@@ -51,7 +49,12 @@ class Metadata
     } else if (this.isText()) {
       return value;
     } else {
-      return (value) ? value : null;
+      var v = String(value).trim();
+      if (this.isNumber()) {
+        return (v) ? v : 0;
+      } else {
+        return (v) ? v : null;
+      }
     }
   }
 }
