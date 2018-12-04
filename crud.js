@@ -38,11 +38,18 @@ class Crud extends CrudInterface
 
   getViewMetadata(list) {
     var results = {};
-    Object.keys(this.metadata).forEach((key) => {
-      if (!list || (list.indexOf(key) != -1) ) {
+    if (list) {
+      list.forEach((key) => {
+        var data = this.metadata[key];
+        if (data) {
+          results[key] = data.getViewInfo();
+        }
+      });
+    } else {
+      Object.keys(this.metadata).forEach((key) => {
         results[key] = this.metadata[key].getViewInfo();
-      }
-    });
+      });
+    }
     return results;
   }
 
