@@ -191,26 +191,34 @@ class Crud extends CrudInterface
   }
 
   initUpdateBuilder(builder, params) {
-    this.initQueryBuilder(builder, params);
+    this.initUpdateBuilderX(builder, params);
     builder.addRawValues(params.__valueRaw);
-    builder.useReturning((params.__useReturning) ? params.__useReturning : this.options.useReturning);
+  }
+
+  initUpdateBuilderX(builder, params) {
+    this.initQueryBuilder(builder, params);
+    var returning = (params.__useReturning)
+      ? params.__useReturning : this.options.useReturning;
+    builder.useReturning(returning);
   }
 
   delete() {
     var exec = this.beforeCUD(arguments);
     var builder = this.getDeleteBuilder(exec.params);
-    this.initUpdateBuilder(builder, exec.params);
     this.executeQuery(exec, builder.build());
   }
 
   getDeleteBuilder(params) {
+    var builder;
     if (this.options.useTimestamp && !params.__noTimestamp) {
-      var builder = new UpdateBuilder();
+      builder = new UpdateBuilder();
       builder.addRawValue('deleted_at', 'now()');
-      return builder;
+      builder.addRawValues(params.__valueRaw);
     } else {
-      return new DeleteBuilder();
+      builder = new DeleteBuilder();
     }
+    this.initUpdateBuilderX(builder, params);
+    return builder;
   }
 
   mark() {
