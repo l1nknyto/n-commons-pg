@@ -181,13 +181,21 @@ class Crud extends CrudInterface
 
   updateChanges() {
     var exec = this.beforeCUD(arguments);
-    this.retrive(exec.params, NCommons.ok(exec.callback, (row) => {
-      var params = this.getChanges(row, exec.params);
+    var updateWithExisting = (existing) => {
+      var params = this.getChanges(existing, exec.params);
       this.update(exec.executor, params, NCommons.ok(exec.callback, (row, extra) => {
         extra.params = params;
         return exec.callback(null, row, extra);
       }));
-    }));
+    };
+
+    if (exec.params.__existing) {
+      updateWithExisting(exec.params.__existing);
+    } else {
+      this.retrive(exec.params, NCommons.ok(exec.callback, (row) => {
+        updateWithExisting(row);
+      }));
+    }
   }
 
   initUpdateBuilder(builder, params) {
