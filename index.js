@@ -17,9 +17,14 @@ function beginTransaction(transaction, client, callback)
 
 function runQueryInDomain(client, query, params, callback)
 {
+  var outerDomain = process.domain;
   var d = domain.create();
   d.on('error', (err) => {
-    return callback(err);
+    if (outerDomain) {
+      outerDomain.emit('error', err);
+    } else {
+      return callback(err);
+    }
   })
   d.run(() => {
     client.query(query, params, callback);

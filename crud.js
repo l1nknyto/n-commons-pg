@@ -97,7 +97,7 @@ class Crud extends CrudInterface
         Logger.debug(this.constructor.name + '.executeQuery', query);
       }
       exec.executor.execute(query.sql, query.params, NCommons.ok(exec.callback, function(rows, count) {
-        return exec.callback(null, (rows) ? rows[0] : {}, { count: count });
+        return exec.callback(null, (rows) ? rows[0] : {}, { count: count, rows: rows });
       }));
     } else {
       return exec.callback(null, {});
