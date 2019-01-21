@@ -8,6 +8,7 @@ const QueryBuilder = require('./query-builder');
 // addOrder(table, field, direction = 'ASC')
 // addOrders(table, arr)
 // setLimit(limit, offset = 0)
+// getResultField(table, field)
 // --- inherit
 // constructor()
 // addTable(crud|{ sql, relations }, alias = '', join = 'JOIN', relations = [])
@@ -142,7 +143,8 @@ class SelectBuilder extends QueryBuilder
 
   getResultField(table, field) {
     var alias = this.tables.get(table).alias;
-    return (1 == this.tables.size) ? field : alias + '__' + field;
+    var resultField = (1 == this.tables.size) ? field : alias + '__' + field;
+    return resultField.toLowerCase();
   }
 
   getFromSql() {
