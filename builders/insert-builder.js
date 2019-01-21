@@ -20,7 +20,7 @@ const QueryBuilder = require('./query-builder');
 class InsertBuilder extends QueryBuilder
 {
   constructor() {
-    super()
+    super();
     this.rawValues = [];
   }
 

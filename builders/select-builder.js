@@ -19,7 +19,7 @@ const QueryBuilder = require('./query-builder');
 class SelectBuilder extends QueryBuilder
 {
   constructor() {
-    super()
+    super();
     this.selects = [];
     this.orders  = [];
     this.limits  = {};
@@ -138,6 +138,11 @@ class SelectBuilder extends QueryBuilder
     var alias = this.tables.get(table).alias;
     var newField = this.getTableField(table, field, alias);
     return (1 == this.tables.size) ? newField : newField + ' as ' + alias + '__' + field;
+  }
+
+  getResultField(table, field) {
+    var alias = this.tables.get(table).alias;
+    return (1 == this.tables.size) ? field : alias + '__' + field;
   }
 
   getFromSql() {

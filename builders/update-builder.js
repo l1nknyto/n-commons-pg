@@ -19,7 +19,7 @@ const QueryBuilder = require('./query-builder');
 class UpdateBuilder extends QueryBuilder
 {
   constructor() {
-    super()
+    super();
     this.rawValues = [];
   }
 
