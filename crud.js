@@ -36,21 +36,30 @@ class Crud extends CrudInterface
     }
   }
 
-  getViewMetadata(list) {
+  getDatabaseMetadata(list) {
+    this.getMetadata(list, true);
+  }
+
+  getMetadata(list, db) {
     var results = {};
-    if (list) {
-      list.forEach((key) => {
-        var data = this.metadata[key];
-        if (data) {
-          results[key] = data.getViewInfo();
-        }
-      });
-    } else {
-      Object.keys(this.metadata).forEach((key) => {
-        results[key] = this.metadata[key].getViewInfo();
-      });
-    }
+    var fields  = (list) ? list : this.tableFields;
+    fields.forEach((key) => this.enrichMetadata(results, key, db));
     return results;
+  }
+
+  enrichMetadata(metadata, key, db) {
+    var data = this.metadata[key];
+    if (data) {
+      if (db) {
+        metadata[key] = data.getDatabaseInfo();
+      } else {
+        metadata[key] = data.getViewInfo();
+      }
+    }
+  }
+
+  getViewMetadata(list) {
+    this.getMetadata(list, false);
   }
 
   beforeCUD(args) {

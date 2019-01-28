@@ -44,7 +44,7 @@ class QueryBuilder
       table      : table,
       field      : field,
       value      : value,
-      operator   : (operator) ? operator : '=',
+      operator   : (operator)   ? ' ' + operator.trim()   + ' ' : '=',
       conjuction : (conjuction) ? ' ' + conjuction.trim() + ' ' : ' AND ',
       rawValue   : (rawValue) ? rawValue : false
     });
