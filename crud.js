@@ -37,7 +37,7 @@ class Crud extends CrudInterface
   }
 
   getDatabaseMetadata(list) {
-    this.getMetadata(list, true);
+    return this.getMetadata(list, true);
   }
 
   getMetadata(list, db) {
@@ -59,7 +59,7 @@ class Crud extends CrudInterface
   }
 
   getViewMetadata(list) {
-    this.getMetadata(list, false);
+    return this.getMetadata(list, false);
   }
 
   beforeCUD(args) {
