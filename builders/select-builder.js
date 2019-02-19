@@ -9,6 +9,7 @@ const QueryBuilder = require('./query-builder');
 // addOrders(table, arr)
 // setLimit(limit, offset = 0)
 // getResultField(table, field)
+// initSelectFields()
 // --- inherit
 // constructor()
 // addTable(crud|{ sql, relations }, alias = '', join = 'JOIN', relations = [])
@@ -98,14 +99,23 @@ class SelectBuilder extends QueryBuilder
     return 'SELECT ' + this.getSelectSql() + ' FROM '+ this.getFromSql();
   }
 
-  getSelectSql() {
+  initSelectFields() {
     if (!this.selects.length) {
-      this.tables.forEach((value, key) => {
-        this.addSelect(key, '*');
+      this.tables.forEach((info, table) => {
+        if (table instanceof Crud) {
+          table.tableFields.forEach((field) => {
+            this.addSelect(table, field);
+          });
+        } else {
+          this.addSelect(table, '*');
+        }
       });
     }
+  }
 
+  getSelectSql() {
     var results = [];
+    this.initSelectFields();
     this.selects.forEach((item) => {
       if (item.table) {
         results = results.concat(this.getSelectField(item.table, item.field));
@@ -118,10 +128,7 @@ class SelectBuilder extends QueryBuilder
 
   getSelectField(table, field) {
     if (table instanceof Crud) {
-      var fields = table.tableFields;
-      if ('*' == field) {
-        return fields.map((item) => this.getSelectFieldAs(table, item));
-      } else if (fields.indexOf(field) >= 0) {
+      if (table.tableFields.indexOf(field) >= 0) {
         return [this.getSelectFieldAs(table, field)];
       } else {
         return [];
