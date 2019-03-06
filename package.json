@@ -1,6 +1,6 @@
 {
   "name": "n-commons-pg",
-  "version": "1.9.11",
+  "version": "1.10.0",
   "description": "Node Commons utilities for PostgreSQL",
   "main": "index.js",
   "scripts": {

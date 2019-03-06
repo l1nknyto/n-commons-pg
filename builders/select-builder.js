@@ -15,7 +15,7 @@ const QueryBuilder = require('./query-builder');
 // addTable(crud|{ sql, relations }, alias = '', join = 'JOIN', relations = [])
 // setTableData(table, data)
 // addWhere(table, field, value, operator = '=', conjuction = 'AND', rawValue = false)
-// addWhereArray(table, array)
+// addWhereObject(table, array)
 // setWhereRaw(value)
 // build()
 class SelectBuilder extends QueryBuilder
@@ -51,10 +51,11 @@ class SelectBuilder extends QueryBuilder
   }
 
   _addSelectField(table, field) {
-    this.selects.push({
-      table  : table,
-      field : field
-    });
+    if ('*' == field && table instanceof Crud) {
+      table.tableFields.forEach((field) => this.addSelect(table, field));
+    } else {
+      this.selects.push({ table: table, field: field });
+    }
   }
 
   addOrder(table, field, direction = 'ASC') {
@@ -102,13 +103,7 @@ class SelectBuilder extends QueryBuilder
   initSelectFields() {
     if (!this.selects.length) {
       this.tables.forEach((info, table) => {
-        if (table instanceof Crud) {
-          table.tableFields.forEach((field) => {
-            this.addSelect(table, field);
-          });
-        } else {
-          this.addSelect(table, '*');
-        }
+        this.addSelect(table, '*');
       });
     }
   }

@@ -5,7 +5,7 @@ const QueryBuilder = require('./query-builder');
 // addTable(crud|{ sql, relations }, alias = '', join = 'JOIN', relations = [])
 // setTableData(table, data)
 // addWhere(table, field, value, operator = '=', conjuction = 'AND', rawValue = false)
-// addWhereArray(table, array)
+// addWhereObject(table, array)
 // setWhereRaw(value)
 // build()
 class DeleteBuilder extends QueryBuilder

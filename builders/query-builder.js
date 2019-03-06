@@ -2,7 +2,7 @@
 // addTable(crud|{ sql, relations }, alias = '', join = 'JOIN', relations = [])
 // setTableData(table, data)
 // addWhere(table, field, value, operator = '=', conjuction = 'AND', rawValue = false)
-// addWhereArray(table, array)
+// addWhereObject(table, array)
 // setWhereRaw(value)
 // useReturning(value)
 // build()
@@ -40,19 +40,49 @@ class QueryBuilder
   }
 
   addWhere(table, field, value, operator = null, conjuction = null, rawValue = null) {
-    this.wheres.push({
+    var item = this.createWhereItem(table, field, value, operator, conjuction, rawValue);
+    this.wheres.push(item);
+    return this;
+  }
+
+  createWhereItem(table, field, value, operator = null, conjuction = null, rawValue = null) {
+    return {
       table      : table,
       field      : field,
       value      : value,
       operator   : (operator)   ? ' ' + operator.trim()   + ' ' : '=',
       conjuction : (conjuction) ? ' ' + conjuction.trim() + ' ' : ' AND ',
       rawValue   : (rawValue) ? rawValue : false
-    });
-    return this;
+    };
   }
 
-  addWhereArray(table, arr) {
-    return this.addWhere(table, arr[0], arr[1], arr[2], arr[3], arr[4]);
+  addWhereObject(table, obj) {
+    if (Array.isArray(obj)) {
+      return this.addWhere(table, ...obj);
+    } else {
+      return this.addWhereGroup(obj.group, obj.conjuction, table);
+    }
+  }
+
+  addWhereGroup(group, conjuction = null, table = null) {
+    var createGroupItem = (item) => {
+      if (Array.isArray(item)) {
+        return this.createWhereItem(table, ...item);
+      } else {
+        if (!item.table) {
+          item.table = table;
+        }
+        if (item.group) {
+          item.group = item.group.map((item) => createGroupItem(item));
+        }
+        return item;
+      }
+    };
+    this.wheres.push({
+      group      : group.map((item) => createGroupItem(item)),
+      conjuction : (conjuction) ? ' ' + conjuction.trim() + ' ' : ' AND '
+    });
+    return this;
   }
 
   setWhereRaw(value) {
@@ -94,15 +124,36 @@ class QueryBuilder
     if (this.whereRaw) sql = this.whereRaw;
     var dataSql = this._getWhereFromTableData();
     if (dataSql) sql += (sql) ? ' AND ' + dataSql : dataSql;
-
     this.wheres.forEach((item) => {
-      var field = (item.table) ? this.getTableField(item.table, item.field) : item.field;
-      var condition = (item.rawValue)
-        ? field + ' ' + item.operator + ' ' + item.value
-        : this.createCondition(field, item.value, item.operator);
+      var condition = this._createWhereItemCondition(item);
       sql = this.appendCondition(sql, condition, item.conjuction);
     });
     return (sql) ? ' WHERE ' + sql : '';
+  }
+
+  _createWhereItemCondition(item) {
+    if (item.group) {
+      return this._createWhereGroupCondition(item.group);
+    } else {
+      return this._createWhereSingleCondition(item);
+    }
+  }
+
+  _createWhereGroupCondition(group) {
+    var sql = '';
+    for (var i = 0; i < group.length; i++) {
+      var item      = group[i];
+      var condition = this._createWhereItemCondition(item);
+      sql = this.appendCondition(sql, condition, item.conjuction);
+    }
+    return '(' + sql + ')';
+  }
+
+  _createWhereSingleCondition(item) {
+    var field = (item.table) ? this.getTableField(item.table, item.field) : item.field;
+    return (item.rawValue)
+      ? (field + item.operator + item.value)
+      : this.createCondition(field, item.value, item.operator);
   }
 
   _getWhereFromTableData() {
@@ -124,7 +175,7 @@ class QueryBuilder
   }
 
   appendCondition(sql, condition, conjuction) {
-    return (sql) ? sql + conjuction + condition : condition;
+    return (sql) ? (sql + conjuction + condition) : condition;
   }
 
   getTableField(table, field, alias = null) {

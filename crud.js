@@ -145,7 +145,7 @@ class Crud extends CrudInterface
     builder.addTable(this);
     builder.setTableData(this, params);
     if (params.__where && params.__where.length) {
-      params.__where.forEach((arr) => builder.addWhereArray(this, arr));
+      params.__where.forEach((arr) => builder.addWhereObject(this, arr));
     }
     builder.setWhereRaw(params.__whereRaw);
   }
