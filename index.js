@@ -31,6 +31,20 @@ function runQueryInDomain(client, query, params, callback)
   });
 }
 
+function okWithEmpty(callback, successCallback) {
+  return function(err, rows, extras) {
+    if (err) {
+      if (err.empty) {
+        return callback(null, null);
+      } else {
+        return callback(err);
+      }
+    } else {
+      return successCallback(null, rows, extras);
+    }
+  }
+}
+
 /*** End class PgTransaction ***/
 var instance;
 module.exports = function(singleton = true) {
@@ -54,6 +68,7 @@ function pgutils()
 
   self.init                 = init;
   self.end                  = end;
+  self.okWithEmpty          = okWithEmpty;
   self.getConfig            = getConfig;
   self.execute              = execute;
   self.select               = select;
