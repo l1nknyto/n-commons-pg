@@ -40,7 +40,11 @@ function okWithEmpty(callback, successCallback) {
         return callback(err);
       }
     } else {
-      return successCallback(rows, extras);
+      if (successCallback) {
+        return successCallback(rows, extras);
+      } else {
+        return callback(null, rows);
+      }
     }
   }
 }
