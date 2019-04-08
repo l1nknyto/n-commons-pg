@@ -160,7 +160,7 @@ class QueryBuilder
     if (this.tableData.size) {
       this.tableData.forEach((value, key) => {
         var dataValue = value[key.options.idField];
-        if (dataValue) {
+        if (typeof dataValue !== 'undefined') {
           this.addWhere(key, key.options.idField, dataValue);
         }
       });
