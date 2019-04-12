@@ -171,7 +171,12 @@ class QueryBuilder
 
   createCondition(field, value, operator) {
     this.params.push(value);
-    return field + operator + '$' + this.params.length;
+    var varIndex = '$' + this.params.length;
+    if (operator.indexOf('$') != -1) {
+      return field + operator.replace("$", varIndex);
+    } else {
+      return field + operator + '$' + this.params.length;
+    }
   }
 
   appendCondition(sql, condition, conjuction) {
