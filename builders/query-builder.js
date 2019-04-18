@@ -207,8 +207,8 @@ class QueryBuilder {
     var entry;
     var itr = this.tables.entries();
     while(entry = itr.next().value) {
-      if (itr[0] instanceof cl) {
-        return itr[0];
+      if (entry[0] instanceof cl) {
+        return entry[0];
       }
     }
     return null;
@@ -218,8 +218,8 @@ class QueryBuilder {
     var entry;
     var itr = this.tables.entries();
     while(entry = itr.next().value) {
-      if (itr[1].alias == alias) {
-        return itr[0];
+      if (entry[1].alias == alias) {
+        return entry[0];
       }
     }
     return null;
