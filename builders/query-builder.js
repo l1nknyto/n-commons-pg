@@ -5,17 +5,19 @@
 // addWhereObject(table, array)
 // setWhereRaw(value)
 // useReturning(value)
+// getTableByClass(cl)
+// getTableByAlias(alias)
+
 // build()
-class QueryBuilder
-{
+class QueryBuilder {
   constructor() {
-    this.tables    = new Map();
+    this.tables = new Map();
     this.tableData = new Map();
-    this.whereRaw  = '';
-    this.wheres    = [];
-    this.params    = [];
-    this.options   = {
-      useReturning : null
+    this.whereRaw = '';
+    this.wheres = [];
+    this.params = [];
+    this.options = {
+      useReturning: null
     };
   }
 
@@ -26,9 +28,9 @@ class QueryBuilder
    */
   addTable(table, alias = '', join = 'JOIN', relations = []) {
     var value = {
-      alias     : alias.toUpperCase(),
-      join      : join,
-      relations : relations
+      alias: alias.toUpperCase(),
+      join: join,
+      relations: relations
     };
     this.tables.set(table, value);
     return this;
@@ -47,12 +49,12 @@ class QueryBuilder
 
   createWhereItem(table, field, value, operator = null, conjuction = null, rawValue = null) {
     return {
-      table      : table,
-      field      : field,
-      value      : value,
-      operator   : (operator)   ? ' ' + operator.trim()   + ' ' : '=',
-      conjuction : (conjuction) ? ' ' + conjuction.trim() + ' ' : ' AND ',
-      rawValue   : (rawValue) ? rawValue : false
+      table: table,
+      field: field,
+      value: value,
+      operator: (operator) ? ' ' + operator.trim() + ' ' : '=',
+      conjuction: (conjuction) ? ' ' + conjuction.trim() + ' ' : ' AND ',
+      rawValue: (rawValue) ? rawValue : false
     };
   }
 
@@ -79,8 +81,8 @@ class QueryBuilder
       }
     };
     this.wheres.push({
-      group      : group.map((item) => createGroupItem(item)),
-      conjuction : (conjuction) ? ' ' + conjuction.trim() + ' ' : ' AND '
+      group: group.map((item) => createGroupItem(item)),
+      conjuction: (conjuction) ? ' ' + conjuction.trim() + ' ' : ' AND '
     });
     return this;
   }
@@ -98,17 +100,17 @@ class QueryBuilder
   build() {
     var sql = this._buildSql() + this.getReturning();
     var results = {
-      sql    : sql,
-      params : this.params
+      sql: sql,
+      params: this.params
     };
     this.params = [];
     return results;
   }
 
   getReturning() {
-    var useReturning = (this.options.useReturning != null)
-      ? this.options.useReturning : this.getFirstTable().options.useReturning;
-    return (useReturning) ? ' RETURNING *': '';
+    var useReturning = (this.options.useReturning != null) ?
+      this.options.useReturning : this.getFirstTable().options.useReturning;
+    return (useReturning) ? ' RETURNING *' : '';
   }
 
   _buildSql() {
@@ -142,7 +144,7 @@ class QueryBuilder
   _createWhereGroupCondition(group) {
     var sql = '';
     for (var i = 0; i < group.length; i++) {
-      var item      = group[i];
+      var item = group[i];
       var condition = this._createWhereItemCondition(item);
       sql = this.appendCondition(sql, condition, item.conjuction);
     }
@@ -151,9 +153,9 @@ class QueryBuilder
 
   _createWhereSingleCondition(item) {
     var field = (item.table) ? this.getTableField(item.table, item.field) : item.field;
-    return (item.rawValue)
-      ? (field + item.operator + item.value)
-      : this.createCondition(field, item.value, item.operator);
+    return (item.rawValue) ?
+      (field + item.operator + item.value) :
+      this.createCondition(field, item.value, item.operator);
   }
 
   _getWhereFromTableData() {
@@ -199,6 +201,28 @@ class QueryBuilder
 
   getFirstTableName() {
     return this.getTableName(this.getFirstTable());
+  }
+
+  getTableByClass(cl) {
+    var entry;
+    var itr = this.tables.entries();
+    while(entry = itr.next().value) {
+      if (itr[0] instanceof cl) {
+        return itr[0];
+      }
+    }
+    return null;
+  }
+
+  getTableByAlias(alias) {
+    var entry;
+    var itr = this.tables.entries();
+    while(entry = itr.next().value) {
+      if (itr[1].alias == alias) {
+        return itr[0];
+      }
+    }
+    return null;
   }
 }
 
