@@ -67,7 +67,7 @@ class QueryBuilder {
   }
 
   addWhereGroup(group, conjuction = null, table = null) {
-    var createGroupItem = (item) => {
+    var createGroupItem = (item, conjuction, table) => {
       if (Array.isArray(item)) {
         return this.createWhereItem(table, ...item);
       } else {
@@ -78,14 +78,15 @@ class QueryBuilder {
           item.conjuction = conjuction;
         }
         if (item.group) {
-          item.group = item.group.map((item) => createGroupItem(item));
+          item.group = item.group.map((i) => createGroupItem(i, item.conjuction, item.table));
         }
         return item;
       }
     };
+    var conjuction_ = (conjuction) ? conjuction.trim() : 'AND';
     this.wheres.push({
-      group: group.map((item) => createGroupItem(item)),
-      conjuction: (conjuction) ? ' ' + conjuction.trim() + ' ' : ' AND '
+      group: group.map((item) => createGroupItem(item, conjuction_, table)),
+      conjuction: ' ' + conjuction_ + ' '
     });
     return this;
   }
@@ -209,7 +210,7 @@ class QueryBuilder {
   getTableByClass(cl) {
     var entry;
     var itr = this.tables.entries();
-    while(entry = itr.next().value) {
+    while (entry = itr.next().value) {
       if (entry[0] instanceof cl) {
         return entry[0];
       }
@@ -220,7 +221,7 @@ class QueryBuilder {
   getTableByAlias(alias) {
     var entry;
     var itr = this.tables.entries();
-    while(entry = itr.next().value) {
+    while (entry = itr.next().value) {
       if (entry[1].alias == alias) {
         return entry[0];
       }
