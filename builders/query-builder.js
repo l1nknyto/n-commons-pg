@@ -74,6 +74,9 @@ class QueryBuilder {
         if (!item.table) {
           item.table = table;
         }
+        if (!item.conjuction) {
+          item.conjuction = conjuction;
+        }
         if (item.group) {
           item.group = item.group.map((item) => createGroupItem(item));
         }
