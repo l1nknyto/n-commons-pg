@@ -149,6 +149,23 @@ class SelectBuilder extends QueryBuilder
     return resultField.toLowerCase();
   }
 
+  getResultRow(row, table, field) {
+    if (Array.isArray(field)) {
+      var results = {};
+      for (var i = 0; i < field.length; i++) {
+        var f = field[i];
+        if (Array.isArray(f)) {
+          results[f[1]] = row[this.getResultField(table, f[0])];
+        } else {
+          results[f] = row[this.getResultField(table, f)];
+        }
+      }
+      return results;
+    } else {
+      return row[this.getResultField(table, field)];
+    }
+  }
+
   getFromSql() {
     var table;
     var tableHasRelation =[], tableJoineds = [], tableRelations = [];
