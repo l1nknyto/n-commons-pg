@@ -67,6 +67,7 @@ class QueryBuilder {
   }
 
   addWhereGroup(group, conjuction = null, table = null) {
+    if (!group || !group.length) return this;
     var createGroupItem = (item, conjuction, table) => {
       if (Array.isArray(item)) {
         return this.createWhereItem(table, ...item);
