@@ -26,11 +26,11 @@ class QueryBuilder {
    * - crud
    * - string
    */
-  addTable(table, alias = '', join = 'JOIN', relations = []) {
+  addTable(table, alias = '', join = null, relations = null) {
     var value = {
       alias: alias.toUpperCase(),
-      join: join,
-      relations: relations
+      join: (join) ? join : 'JOIN',
+      relations: (relations) ? relations : []
     };
     this.tables.set(table, value);
     return this;
