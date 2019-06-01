@@ -221,12 +221,10 @@ class SelectBuilder extends QueryBuilder
   _getTableRelation(table1, table2) {
     var info1 = this.tables.get(table1);
     var info2 = this.tables.get(table2);
-
     var relations = this._getExpectedTableRelation(table1, info1);
     for (var i = 0; i < relations.length; i++) {
       var relation = relations[i];
-      if ((_.isFunction(relation.to) && table2 instanceof relation.to)
-          || table2 == relation.to) {
+      if (table2 == relation.to || (_.isFunction(relation.to) && table2 instanceof relation.to)) {
         return this._getRelationCondition(relation, info1, info2);
       }
     }

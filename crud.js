@@ -1,24 +1,24 @@
-const _             = require('underscore');
-const PgUtils       = require('./index')();
-const NCommons      = require('n-commons');
-const Logger        = require('n-commons/logger');
+const _ = require('underscore');
+const PgUtils = require('./index')();
+const NCommons = require('n-commons');
+const Logger = require('n-commons/logger');
 const SelectBuilder = require('./builders/select-builder');
 const InsertBuilder = require('./builders/insert-builder');
 const UpdateBuilder = require('./builders/update-builder');
 const DeleteBuilder = require('./builders/delete-builder');
 const CrudInterface = require('./crud.interface');
 
-class Crud extends CrudInterface
-{
+class Crud extends CrudInterface {
+
   /**
    * markParams: array of array(0: field, 1: value, 2: operator?)
    */
   constructor(tableName, metadata, markParams = null, options = null) {
     super();
-    this.tableName   = tableName;
-    this.metadata    = metadata;
+    this.tableName = tableName;
+    this.metadata = metadata;
     this.tableFields = Object.keys(metadata);
-    this.markParams  = (markParams) ? markParams : [];
+    this.markParams = (markParams) ? markParams : [];
 
     if (!options) {
       this.options = { idField: 'id', useReturning: true, useTimestamp: false };
@@ -40,21 +40,45 @@ class Crud extends CrudInterface
     return this.getMetadata(list, true);
   }
 
-  getMetadata(list, db) {
+  getMetadata(list, asDb) {
+    if (list) {
+      if (Array.isArray(list)) {
+        return this.getArrayMetadata(list, asDb);
+      } else {
+        return this.getSingleMetadata(list, asDb);
+      }
+    } else {
+      return this.getArrayMetadata(this.tableFields, asDb);
+    }
+  }
+
+  getSingleMetadata(key, asDb) {
+    return this.getMetadataInfo(key, asDb);
+  }
+
+  getArrayMetadata(fields, asDb) {
     var results = {};
-    var fields  = (list) ? list : this.tableFields;
-    fields.forEach((key) => this.enrichMetadata(results, key, db));
+    fields.forEach((key) => this.enrichMetadata(results, key, asDb));
     return results;
   }
 
-  enrichMetadata(metadata, key, db) {
+  enrichMetadata(metadata, key, asDb) {
+    var data = this.getMetadataInfo(key, asDb);
+    if (data) {
+      metadata[key] = data;
+    }
+  }
+
+  getMetadataInfo(key, asDb) {
     var data = this.metadata[key];
     if (data) {
-      if (db) {
-        metadata[key] = data.getDatabaseInfo();
+      if (asDb) {
+        return JSON.parse(JSON.stringify(data.getDatabaseInfo()));
       } else {
-        metadata[key] = data.getViewInfo();
+        return JSON.parse(JSON.stringify(data.getViewInfo()));
       }
+    } else {
+      return null;
     }
   }
 
@@ -105,7 +129,7 @@ class Crud extends CrudInterface
       if (Logger.isDebug()) {
         Logger.debug(this.constructor.name + '.executeQuery', query);
       }
-      exec.executor.execute(query.sql, query.params, NCommons.ok(exec.callback, function(rows, count) {
+      exec.executor.execute(query.sql, query.params, NCommons.ok(exec.callback, function (rows, count) {
         return exec.callback(null, (rows) ? rows[0] : {}, { count: count, rows: rows });
       }));
     } else {
@@ -120,7 +144,7 @@ class Crud extends CrudInterface
    */
   retrive(id, callback) {
     var builder = this.createSelectBuilder((id === Object(id)) ? id : { id: id });
-    var query   = builder.build();
+    var query = builder.build();
     if (query && query.sql) {
       if (Logger.isDebug()) {
         Logger.debug(this.constructor.name + '.retrive', query);
@@ -135,9 +159,9 @@ class Crud extends CrudInterface
     var builder = new SelectBuilder();
     this.initQueryBuilder(builder, params);
     if (params.__noTimestamp) builder.addNoTimestamp(this);
-    if (params.__select)      builder.addSelect(this, params.__select);
-    if (params.__order)       builder.addOrders(this, params.__order);
-    if (params.__limit)       builder.setLimit(params.__limit[0], params.__limit[1]);
+    if (params.__select) builder.addSelect(this, params.__select);
+    if (params.__order) builder.addOrders(this, params.__order);
+    if (params.__limit) builder.setLimit(params.__limit[0], params.__limit[1]);
     return builder;
   }
 
@@ -152,7 +176,7 @@ class Crud extends CrudInterface
 
   retriveAll(params, callback) {
     var builder = this.createSelectBuilder(params);
-    var query   = builder.build();
+    var query = builder.build();
     if (query && query.sql) {
       if (Logger.isDebug()) {
         Logger.debug(this.constructor.name + '.retriveAll', query);

@@ -86,7 +86,7 @@ it('test build select using subquery - override relations', function() {
   builder.addSelect(table1, 'id');
 
   var results = builder.build();
-  var expectedSql = 'SELECT C1.id as C1__id FROM (SELECT 1 as key) C2 null table1 C1 ON C1.key=C2.id WHERE C1.deleted_at IS NULL';
+  var expectedSql = 'SELECT C1.id as C1__id FROM (SELECT 1 as key) C2 JOIN table1 C1 ON C1.key=C2.id WHERE C1.deleted_at IS NULL';
   expect(results.sql).to.equal(expectedSql);
 });
 
