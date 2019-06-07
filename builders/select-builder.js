@@ -4,9 +4,10 @@ const QueryBuilder = require('./query-builder');
 
 // addUseTimestamp(table)
 // addNoTimestamp(table)
-// addSelect(table, field)
+// addSelect(table, field, raw = false)
 // addOrder(table, field, direction = 'ASC')
 // addOrders(table, arr)
+// addGroupBy(table, arr)
 // setLimit(limit, offset = 0)
 // getResultField(table, field)
 // initSelectFields()
@@ -24,6 +25,7 @@ class SelectBuilder extends QueryBuilder
     super();
     this.selects = [];
     this.orders  = [];
+    this.groupBy = [];
     this.limits  = {};
     this.tableWithTimestamp = [];
     this.tableNoTimestamp   = [];
@@ -41,20 +43,20 @@ class SelectBuilder extends QueryBuilder
     return this;
   }
 
-  addSelect(table, field) {
+  addSelect(table, field, raw = false) {
     if (field instanceof Array) {
-      field.forEach((f) => this._addSelectField(table, f));
+      field.forEach((f) => this._addSelectField(table, f, raw));
     } else {
-      this._addSelectField(table, field);
+      this._addSelectField(table, field, raw);
     }
     return this;
   }
 
-  _addSelectField(table, field) {
+  _addSelectField(table, field, raw = false) {
     if ('*' == field && table instanceof Crud) {
       table.tableFields.forEach((field) => this.addSelect(table, field));
     } else {
-      this.selects.push({ table: table, field: field });
+      this.selects.push({ table: table, field: field, raw: raw });
     }
   }
 
@@ -80,6 +82,15 @@ class SelectBuilder extends QueryBuilder
     return this;
   }
 
+  addGroupBy(table, field) {
+    if (field instanceof Array) {
+      field.forEach((f) => this.addGroupBy(table, f));
+    } else {
+      this.groupBy.push({ table: table, field: field });
+    }
+    return this;
+  }
+
   setLimit(limit, offset = 0) {
     this.limits = {
       limit  : limit,
@@ -93,7 +104,11 @@ class SelectBuilder extends QueryBuilder
   }
 
   _buildSql() {
-    return this.getCoreSql() + this.getWhereSql() + this.getOrderSql() + this.getLimitSql();
+    return this.getCoreSql()
+      + this.getWhereSql()
+      + this.getGroupBySql()
+      + this.getOrderSql()
+      + this.getLimitSql();
   }
 
   getCoreSql() {
@@ -112,7 +127,9 @@ class SelectBuilder extends QueryBuilder
     var results = [];
     this.initSelectFields();
     this.selects.forEach((item) => {
-      if (item.table) {
+      if (item.raw) {
+        results.push(item.field);
+      } else if (item.table) {
         results = results.concat(this.getSelectField(item.table, item.field));
       } else {
         results.push(item.field);
@@ -302,6 +319,13 @@ class SelectBuilder extends QueryBuilder
     if (!this.orders.length) return '';
     return ' ORDER BY ' + this.orders.map((item) => {
       return this.getTableField(item.table, item.field) + ' ' + item.direction;
+    }).join(', ');
+  }
+
+  getGroupBySql() {
+    if (!this.groupBy.length) return '';
+    return ' GROUP BY ' + this.groupBy.map((item) => {
+      return this.getTableField(item.table, item.field);
     }).join(', ');
   }
 

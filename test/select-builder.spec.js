@@ -41,12 +41,13 @@ it('test build full select feature', function() {
   builder.addSelect(table2, '*');
   builder.addOrder (table1, 'id', 'ASC');
   builder.addOrder (table2, 'key', 'ASC');
+  builder.addGroupBy(table1, 'key');
   builder.setLimit (10, 20);
 
   var results = builder.build();
   var expectedSql = 'SELECT C1.id as C1__id, C1.key as C1__key, C1.title as C1__title, C2.id as C2__id, C2.key as C2__key, C2.title as C2__title' +
     ' FROM table2 C2 JOIN table1 C1 ON C1.key=C2.id WHERE C1.id=$1 AND C2.key=$2 AND C1.deleted_at IS NULL' +
-    ' ORDER BY C1.id ASC, C2.key ASC LIMIT 10 OFFSET 20';
+    ' GROUP BY C1.key ORDER BY C1.id ASC, C2.key ASC LIMIT 10 OFFSET 20';
   expect(results.sql).to.equal(expectedSql);
   expect(results.params).to.have.lengthOf(2);
   expect(results.params).to.deep.equal(['value 1', 'value 2']);
@@ -82,11 +83,12 @@ it('test build select using subquery - override relations', function() {
     sql : 'SELECT 1 as key'
   };
 
-  builder.addTable(table1, 'c1', null, [{ field: 'key', to: table2, key: 'id'}]).addTable(table2, 'c2');
+  builder.addTable(table1, 'c1', null, [{ field: 'id', to: table2, key: 'key'}]).addTable(table2, 'c2');
+  // builder.addTable(table1, 'c1').addTable(table2, 'c2', null, [{ field: 'key', to: table1, key: 'id'}]);
   builder.addSelect(table1, 'id');
 
   var results = builder.build();
-  var expectedSql = 'SELECT C1.id as C1__id FROM (SELECT 1 as key) C2 JOIN table1 C1 ON C1.key=C2.id WHERE C1.deleted_at IS NULL';
+  var expectedSql = 'SELECT C1.id as C1__id FROM (SELECT 1 as key) C2 JOIN table1 C1 ON C1.id=C2.key WHERE C1.deleted_at IS NULL';
   expect(results.sql).to.equal(expectedSql);
 });
 
