@@ -35,7 +35,7 @@ function okWithEmpty(callback, successCallback) {
   return function(err, rows, extras) {
     if (err) {
       if (err.empty) {
-        return callback(null, null);
+        return callback(null);
       } else {
         return callback(err);
       }
@@ -43,7 +43,7 @@ function okWithEmpty(callback, successCallback) {
       if (successCallback) {
         return successCallback(rows, extras);
       } else {
-        return callback(null, rows);
+        return callback(null, rows, extras);
       }
     }
   }

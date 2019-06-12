@@ -7,7 +7,7 @@ const QueryBuilder = require('./query-builder');
 // addSelect(table, field, raw = false)
 // addOrder(table, field, direction = 'ASC')
 // addOrders(table, arr)
-// addGroupBy(table, arr)
+// addGroupBy(table, field)
 // setLimit(limit, offset = 0)
 // getResultField(table, field)
 // initSelectFields()
