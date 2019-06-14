@@ -21,7 +21,7 @@ const QueryBuilder = require('./query-builder');
 // build()
 class SelectBuilder extends QueryBuilder
 {
-  constructor() {
+  constructor(options) {
     super();
     this.selects = [];
     this.orders  = [];
@@ -29,6 +29,13 @@ class SelectBuilder extends QueryBuilder
     this.limits  = {};
     this.tableWithTimestamp = [];
     this.tableNoTimestamp   = [];
+    this.options = this.initOptions(options);
+  }
+
+  initOptions(opts) {
+    var options = (opts) ? opts : {};
+    if (typeof options.useSelectAs === 'undefined') options.useSelectAs = true;
+    return options;
   }
 
   addUseTimestamp(table) {
@@ -157,12 +164,12 @@ class SelectBuilder extends QueryBuilder
   getSelectFieldAs(table, field) {
     var alias = this.tables.get(table).alias;
     var newField = this.getTableField(table, field, alias);
-    return (1 == this.tables.size) ? newField : newField + ' as ' + alias + '__' + field;
+    return (this.options.useSelectAs && this.tables.size > 1) ? newField + ' as ' + alias + '__' + field : newField;
   }
 
   getResultField(table, field) {
     var alias = this.tables.get(table).alias;
-    var resultField = (1 == this.tables.size) ? field : alias + '__' + field;
+    var resultField = (this.options.useSelectAs && this.tables.size > 1) ? alias + '__' + field : field;
     return resultField.toLowerCase();
   }
 
