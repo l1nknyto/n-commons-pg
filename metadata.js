@@ -19,24 +19,24 @@ class Metadata
   }
 
   getViewInfo() {
-    var dbInfo = Object.assign({}, this.data.database);
-    return Object.assign(dbInfo, this.data.view);
+    var info = Object.assign({}, this.getDatabaseInfo());
+    return Object.assign(info, this.data.view);
   }
 
   isNumber() {
-    return ('number' == this.data.database.type);
+    return ('number' == this.getDatabaseInfo().type);
   }
 
   isArray() {
-    return this.data.database.type.endsWith('[]');
+    return this.getDatabaseInfo().type.endsWith('[]');
   }
 
   isJson() {
-    return this.data.database.type.startsWith('json');
+    return this.getDatabaseInfo().type.startsWith('json');
   }
 
   isText() {
-    return ('text' == this.data.database.type);
+    return ('text' == this.getDatabaseInfo().type);
   }
 
   fixValue(value) {

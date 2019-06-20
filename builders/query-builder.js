@@ -3,6 +3,7 @@
 // setTableData(table, data)
 // addWhere(table, field, value, operator = '=', conjuction = 'AND', rawValue = false)
 // addWhereObject(table, array)
+// addWhereGroup(group, conjuction = null, table = null)
 // setWhereRaw(value)
 // useReturning(value)
 // getTableByClass(cl)
@@ -66,6 +67,11 @@ class QueryBuilder {
     }
   }
 
+  /**
+   * @param {any} group [ ({ table?, field, value, operator, conjuction?, group? }|[field, value, operator?, conjuction?, rawValue?])... ]
+   * @param {String} conjuction
+   * @param {Crud | Object} table
+   */
   addWhereGroup(group, conjuction = null, table = null) {
     if (!group || !group.length) return this;
     var createGroupItem = (item, conjuction, table) => {

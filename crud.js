@@ -37,44 +37,48 @@ class Crud extends CrudInterface {
   }
 
   getDatabaseMetadata(list) {
-    return this.getMetadata(list, true);
+    return this.getMetadata(list, 'D');
   }
 
-  getMetadata(list, asDb) {
+  /**
+   * @param {string|Array<string>} list
+   * @param {string} type
+   */
+  getMetadata(list, type) {
     if (list) {
       if (Array.isArray(list)) {
-        return this.getArrayMetadata(list, asDb);
+        return this.getArrayMetadata(list, type);
       } else {
-        return this.getSingleMetadata(list, asDb);
+        return this.getSingleMetadata(list, type);
       }
     } else {
-      return this.getArrayMetadata(this.tableFields, asDb);
+      return this.getArrayMetadata(this.tableFields, type);
     }
   }
 
-  getSingleMetadata(key, asDb) {
-    return this.getMetadataInfo(key, asDb);
+  getSingleMetadata(key, type) {
+    return this.getMetadataInfo(key, type);
   }
 
-  getArrayMetadata(fields, asDb) {
+  getArrayMetadata(fields, type) {
     var results = {};
-    fields.forEach((key) => this.enrichMetadata(results, key, asDb));
+    fields.forEach((key) => this.enrichMetadata(results, key, type));
     return results;
   }
 
-  enrichMetadata(metadata, key, asDb) {
-    var data = this.getMetadataInfo(key, asDb);
+  enrichMetadata(metadata, key, type) {
+    var data = this.getMetadataInfo(key, type);
     if (data) {
       metadata[key] = data;
     }
   }
 
-  getMetadataInfo(key, asDb) {
+  getMetadataInfo(key, type) {
     var data = this.metadata[key];
     if (data) {
-      if (asDb) {
+      if ('D' == type) {
         return JSON.parse(JSON.stringify(data.getDatabaseInfo()));
-      } else {
+      } else if ('V' == type) {
         return JSON.parse(JSON.stringify(data.getViewInfo()));
       }
     } else {
@@ -83,7 +87,7 @@ class Crud extends CrudInterface {
   }
 
   getViewMetadata(list) {
-    return this.getMetadata(list, false);
+    return this.getMetadata(list, 'V');
   }
 
   beforeCUD(args) {
