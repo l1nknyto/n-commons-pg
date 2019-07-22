@@ -30,7 +30,7 @@ class UpdateBuilder extends QueryBuilder
 
   addRawValues(fieldValues) {
     if (fieldValues && fieldValues.length) {
-      this.rawValues.forEach((fv) => {
+      fieldValues.forEach((fv) => {
         this.addRawValue(fv[0], fv[1], fv[2]);
       });
     }
