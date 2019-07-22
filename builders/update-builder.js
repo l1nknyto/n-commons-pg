@@ -23,14 +23,16 @@ class UpdateBuilder extends QueryBuilder
     this.rawValues = [];
   }
 
-  addRawValue(field, value, operator = '=') {
-    this.rawValues.push([field, value, operator]);
+  addRawValue(field, value, operator = null) {
+    this.rawValues.push([field, value, (operator) ? operator : '=']);
     return this;
   }
 
   addRawValues(fieldValues) {
     if (fieldValues && fieldValues.length) {
-      this.rawValues = this.rawValues.concat(fieldValues);
+      this.rawValues.forEach((fv) => {
+        this.addRawValue(fv[0], fv[1], fv[2]);
+      });
     }
     return this;
   }

@@ -212,7 +212,8 @@ class Crud extends CrudInterface {
         if (this.options.idField == key) continue;
         if (typeof params[key] !== 'undefined') return true;
       }
-    } else if (params.__valueRaw && params.__valueRaw.length) {
+    }
+    if (params.__valueRaw && params.__valueRaw.length) {
       return true;
     }
     return false;
