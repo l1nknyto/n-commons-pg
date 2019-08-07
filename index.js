@@ -49,8 +49,8 @@ function okWithEmpty(callback, successCallback) {
   }
 }
 
-/*** End class PgTransaction ***/
 var instance;
+
 module.exports = function(singleton = true) {
   if (singleton) {
     if (instance) return instance;
@@ -133,10 +133,15 @@ function pgutils()
 
   function select(query, params, callback)
   {
+    selectX(config.pool, query, params, callback);
+  }
+
+  function selectX(client, query, params, callback)
+  {
     if (!query) {
       return callback(null, null);
     } else {
-      runQueryInDomain(config.pool, query, params, function(err, result) {
+      runQueryInDomain(client, query, params, function(err, result) {
         if (err) return handleError(err, query, params, callback);
         else if (result.rows.length == 0) return callback({ empty:true });
         else return callback(null, result.rows);
@@ -146,7 +151,12 @@ function pgutils()
 
   function selectOne(query, params, callback)
   {
-    select(query, params, function(err, rows) {
+    selectOneX(config.pool, query, params, callback);
+  }
+
+  function selectOneX(client, query, params, callback)
+  {
+    selectX(client, query, params, function(err, rows) {
       if (err) return callback(err);
       return callback(null, (rows) ? rows[0] : {});
     });
@@ -189,6 +199,22 @@ function pgutils()
     }
   }
 
+  PgTransaction.prototype.select = function(query, params, callback) {
+    if (this.client) {
+      return selectX(this.client, query, params, callback);
+    } else {
+      return callback({ message: 'Transaction terminated' });
+    }
+  }
+
+  PgTransaction.prototype.selectOne = function(query, params, callback) {
+    if (this.client) {
+      selectOneX(this.client, query, params, callback);
+    } else {
+      return callback({ message: 'Transaction terminated' });
+    }
+  }
+
   PgTransaction.prototype.commit = function(callback) {
     if (!this.client) {
       return callback({ message: 'Transaction terminated' });
@@ -226,6 +252,7 @@ function pgutils()
       });
     }
   }
+  /*** End class PgTransaction ***/
 
   function createTransaction()
   {

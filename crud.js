@@ -142,20 +142,27 @@ class Crud extends CrudInterface {
   }
 
   /**
-   * id
-   * - id value /
-   * - { ...field:value...,  __fields, __where, __whereRaw }
+   * @param {*} executor PgUtils instance | PgTransaction
+   * @param {*} params id value | { 'idField': id value,  __where, __whereRaw, __order }
+   * @param {*} callback 
    */
-  retrive(id, callback) {
-    var builder = this.createSelectBuilder((id === Object(id)) ? id : { id: id });
+  retrive(executor, params, callback) {
+    var exec = PgUtils.getExecutorInfo(...args);
+    var obj = exec.params;
+    var paramsX = {};
+    if (obj === Object(obj)) {
+      Object.assign(paramsX, obj);
+    } else {
+      paramsX[this.options.idField] = obj;
+    }
+
+    var builder = this.createSelectBuilder(paramsX);
     var query = builder.build();
     if (query && query.sql) {
-      if (Logger.isDebug()) {
-        Logger.debug(this.constructor.name + '.retrive', query);
-      }
-      PgUtils.selectOne(query.sql, query.params, callback);
+      if (Logger.isDebug()) Logger.debug(this.constructor.name + '.retrive', query);
+      exec.executor.selectOne(query.sql, query.params, exec.callback);
     } else {
-      return callback(null, {});
+      return exec.callback(null, {});
     }
   }
 
@@ -178,16 +185,20 @@ class Crud extends CrudInterface {
     builder.setWhereRaw(params.__whereRaw);
   }
 
-  retriveAll(params, callback) {
-    var builder = this.createSelectBuilder(params);
+  /**
+   * @param {*} executor PgUtils instance | PgTransaction
+   * @param {*} params id value | { 'idField': id value,  __where, __whereRaw, __order }
+   * @param {*} callback 
+   */
+  retriveAll(executor, params, callback) {
+    var exec = PgUtils.getExecutorInfo(...args);
+    var builder = this.createSelectBuilder(exec.params);
     var query = builder.build();
     if (query && query.sql) {
-      if (Logger.isDebug()) {
-        Logger.debug(this.constructor.name + '.retriveAll', query);
-      }
-      PgUtils.select(query.sql, query.params, callback);
+      if (Logger.isDebug()) Logger.debug(this.constructor.name + '.retriveAll', query);
+      exec.executor.select(query.sql, query.params, exec.callback);
     } else {
-      return callback(null, []);
+      return exec.callback(null, []);
     }
   }
 
