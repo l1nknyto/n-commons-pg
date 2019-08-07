@@ -147,7 +147,7 @@ class Crud extends CrudInterface {
    * @param {*} callback 
    */
   retrive(executor, params, callback) {
-    var exec = PgUtils.getExecutorInfo(...args);
+    var exec = PgUtils.getExecutorInfo(...arguments);
     var obj = exec.params;
     var paramsX = {};
     if (obj === Object(obj)) {
@@ -191,7 +191,7 @@ class Crud extends CrudInterface {
    * @param {*} callback 
    */
   retriveAll(executor, params, callback) {
-    var exec = PgUtils.getExecutorInfo(...args);
+    var exec = PgUtils.getExecutorInfo(...arguments);
     var builder = this.createSelectBuilder(exec.params);
     var query = builder.build();
     if (query && query.sql) {
