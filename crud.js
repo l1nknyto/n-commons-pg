@@ -112,7 +112,7 @@ class Crud extends CrudInterface {
     var builder = new InsertBuilder();
     builder.addTable(this);
     builder.setTableData(this, exec.params);
-    if (this.options.useTimestamp) {
+    if (this.options.useTimestamp && !exec.params.__noTimestamp) {
       builder.addRawValue('created_at', 'now()');
     }
     this.executeQuery(exec, builder.build());
@@ -144,7 +144,7 @@ class Crud extends CrudInterface {
   /**
    * @param {*} executor PgUtils instance | PgTransaction
    * @param {*} params id value | { 'idField': id value,  __where, __whereRaw, __order }
-   * @param {*} callback 
+   * @param {*} callback
    */
   retrive(executor, params, callback) {
     var exec = PgUtils.getExecutorInfo(...arguments);
@@ -188,7 +188,7 @@ class Crud extends CrudInterface {
   /**
    * @param {*} executor PgUtils instance | PgTransaction
    * @param {*} params id value | { 'idField': id value,  __where, __whereRaw, __order }
-   * @param {*} callback 
+   * @param {*} callback
    */
   retriveAll(executor, params, callback) {
     var exec = PgUtils.getExecutorInfo(...arguments);
@@ -210,7 +210,7 @@ class Crud extends CrudInterface {
 
     var builder = new UpdateBuilder();
     this.initUpdateBuilder(builder, exec.params);
-    if (this.options.useTimestamp) {
+    if (this.options.useTimestamp && !exec.params.__noTimestamp) {
       builder.addRawValue('updated_at', 'now()');
     }
     this.executeQuery(exec, builder.build());
