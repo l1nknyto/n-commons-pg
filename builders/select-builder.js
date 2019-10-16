@@ -346,7 +346,7 @@ class SelectBuilder extends QueryBuilder {
     return sql;
   }
 
-  static union(selectBuilders, unionType = 'UNION ALL', unionAlias = 'a') {
+  static union(selectBuilders, unionType = null, unionAlias = 'a') {
     var unions = [];
     var params = [];
     for (let i = 0; i < selectBuilders.length; i++) {
@@ -356,8 +356,9 @@ class SelectBuilder extends QueryBuilder {
       unions.push(result.sql);
       params = params.concat(result.params);
     }
+    var type = (unionType) ? unionType : 'UNION ALL';
     return {
-      sql: 'SELECT * FROM (' + unions.join(' ' + unionType + ' ') + ') ' + unionAlias,
+      sql: 'SELECT * FROM (' + unions.join(' ' + type + ' ') + ') ' + unionAlias,
       params: params
     };
   }

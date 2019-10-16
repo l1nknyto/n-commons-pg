@@ -185,8 +185,8 @@ class QueryBuilder {
   }
 
   createCondition(field, value, operator) {
-    if (operator.indexOf('$') != -1) {this
-      return field + operator.replace(this.getPrepareParam(value));
+    if (operator.indexOf('$') != -1) {
+      return field + operator.replace('$', this.getPrepareParam(value));
     } else {
       return field + operator + this.getPrepareParam(value);
     }
