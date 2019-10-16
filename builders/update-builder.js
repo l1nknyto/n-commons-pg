@@ -9,15 +9,15 @@ const QueryBuilder = require('./query-builder');
 // setLimit(limit, offset = 0)
 // --- inherit QueryBuilder
 // constructor()
+// setOptions(key, value)
 // addTable(crud|{ sql, relations }, alias = '', join = 'JOIN', relations = [])
 // setTableData(table, data)
 // addWhere(table, field, value, operator = '=', conjuction = 'AND', rawValue = false)
 // addWhereObject(table, array)
 // setWhereRaw(value)
-// useReturning(value)
 // build()
-class UpdateBuilder extends QueryBuilder
-{
+class UpdateBuilder extends QueryBuilder {
+
   constructor() {
     super();
     this.rawValues = [];
@@ -48,7 +48,7 @@ class UpdateBuilder extends QueryBuilder
 
   getUpdateFieldValues() {
     var table = this.tables.keys().next().value;
-    var data  = this.tableData.get(table);
+    var data = this.tableData.get(table);
     if (data && Object.keys(data).length) {
       return this._getUpdateFieldValues(table, data);
     }
@@ -61,8 +61,7 @@ class UpdateBuilder extends QueryBuilder
       if (key != table.options.idField) {
         var value = data[key];
         if (typeof value !== 'undefined') {
-          fieldValues.push(key + '=$' + (this.params.length + 1));
-          this.params.push(value);
+          fieldValues.push(key + '=' + this.getPrepareParam(value));
         }
       }
     });

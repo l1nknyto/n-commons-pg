@@ -8,8 +8,8 @@ const QueryBuilder = require('./query-builder');
 // addWhereObject(table, array)
 // setWhereRaw(value)
 // build()
-class DeleteBuilder extends QueryBuilder
-{
+class DeleteBuilder extends QueryBuilder {
+
   getCoreSql() {
     return 'DELETE FROM ' + this.getFirstTableName();
   }

@@ -1,5 +1,5 @@
-const _            = require('underscore');
-const Crud         = require('../crud.interface');
+const _ = require('underscore');
+const Crud = require('../crud.interface');
 const QueryBuilder = require('./query-builder');
 
 // addUseTimestamp(table)
@@ -19,21 +19,20 @@ const QueryBuilder = require('./query-builder');
 // addWhereObject(table, array)
 // setWhereRaw(value)
 // build()
-class SelectBuilder extends QueryBuilder
-{
+class SelectBuilder extends QueryBuilder {
+
   constructor(options) {
-    super();
+    super(options);
     this.selects = [];
-    this.orders  = [];
+    this.orders = [];
     this.groupBy = [];
-    this.limits  = {};
+    this.limits = {};
     this.tableWithTimestamp = [];
-    this.tableNoTimestamp   = [];
-    this.options = this.initOptions(options);
+    this.tableNoTimestamp = [];
   }
 
   initOptions(opts) {
-    var options = (opts) ? opts : {};
+    var options = super.initOptions(opts);
     if (typeof options.useSelectAs === 'undefined') options.useSelectAs = true;
     return options;
   }
@@ -69,9 +68,9 @@ class SelectBuilder extends QueryBuilder
 
   addOrder(table, field, direction = 'ASC') {
     this.orders.push({
-      table      : table,
-      field     : field,
-      direction : direction
+      table: table,
+      field: field,
+      direction: direction
     });
     return this;
   }
@@ -80,9 +79,9 @@ class SelectBuilder extends QueryBuilder
     if (arr && arr.length) {
       arr.forEach((order) => {
         this.orders.push({
-          table     : table,
-          field     : order[0],
-          direction : (order[1]) ? order[1] : 'ASC'
+          table: table,
+          field: order[0],
+          direction: (order[1]) ? order[1] : 'ASC'
         });
       });
     }
@@ -100,8 +99,8 @@ class SelectBuilder extends QueryBuilder
 
   setLimit(limit, offset = 0) {
     this.limits = {
-      limit  : limit,
-      offset : offset
+      limit: limit,
+      offset: offset
     };
     return this;
   }
@@ -119,7 +118,7 @@ class SelectBuilder extends QueryBuilder
   }
 
   getCoreSql() {
-    return 'SELECT ' + this.getSelectSql() + ' FROM '+ this.getFromSql();
+    return 'SELECT ' + this.getSelectSql() + ' FROM ' + this.getFromSql();
   }
 
   initSelectFields() {
@@ -192,9 +191,9 @@ class SelectBuilder extends QueryBuilder
 
   getFromSql() {
     var table;
-    var tableHasRelation =[], tableJoineds = [], tableRelations = [];
+    var tableHasRelation = [], tableJoineds = [], tableRelations = [];
     var itr = this.tables.keys();
-    while(table = itr.next().value) {
+    while (table = itr.next().value) {
       this._addTableRelation(table, tableHasRelation, tableJoineds, tableRelations);
     }
 
@@ -210,9 +209,9 @@ class SelectBuilder extends QueryBuilder
     for (var i = 0; i < tableJoineds.length; i++) {
       var sqlTableJoin = [];
       for (var j = 0; j < tableJoineds[i].length; j++) {
-        var tableJoin  = tableJoineds[i][j];
-        var relation   = tableRelations[i][j];
-        var info       = this.tables.get(tableJoin);
+        var tableJoin = tableJoineds[i][j];
+        var relation = tableRelations[i][j];
+        var info = this.tables.get(tableJoin);
         var tableAlias = (tableJoin instanceof Crud)
           ? this.getTableName(tableJoin) : '(' + tableJoin.sql + ') ' + info.alias;
         if (relation) {
@@ -229,7 +228,7 @@ class SelectBuilder extends QueryBuilder
   _addTableRelation(table, tableHasRelation, tableJoineds, tableRelations) {
     var otherTable;
     var itr = this.tables.keys();
-    while(otherTable = itr.next().value) {
+    while (otherTable = itr.next().value) {
       if (table == otherTable) continue;
       if (this._inTableJoined(otherTable, tableJoineds) != -1) continue;
 
@@ -345,6 +344,22 @@ class SelectBuilder extends QueryBuilder
       sql += ' OFFSET ' + this.limits.offset;
     }
     return sql;
+  }
+
+  static union(selectBuilders, unionType = 'UNION ALL', unionAlias = 'a') {
+    var unions = [];
+    var params = [];
+    for (let i = 0; i < selectBuilders.length; i++) {
+      const builder = selectBuilders[i];
+      builder.setOptions('paramIndex', params.length);
+      var result = builder.build();
+      unions.push(result.sql);
+      params = params.concat(result.params);
+    }
+    return {
+      sql: 'SELECT * FROM (' + unions.join(' ' + unionType + ' ') + ') ' + unionAlias,
+      params: params
+    };
   }
 }
 

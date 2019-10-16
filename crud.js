@@ -256,9 +256,8 @@ class Crud extends CrudInterface {
 
   initUpdateBuilderX(builder, params) {
     this.initQueryBuilder(builder, params);
-    var returning = (params.__useReturning)
-      ? params.__useReturning : this.options.useReturning;
-    builder.useReturning(returning);
+    var useReturning = (params.__useReturning) ? params.__useReturning : this.options.useReturning;
+    builder.setOptions('useReturning', useReturning);
   }
 
   delete() {

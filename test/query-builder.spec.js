@@ -109,8 +109,8 @@ it('test build using useReturning', function() {
   var builder = new TestBuilder();
   var table   = new TestCrud();
 
+  builder.setOptions('useReturning', true);
   builder.addTable(table, 'c');
-  builder.useReturning(true);
   var results = builder.build();
   expect(results.sql).to.equal('core-test RETURNING *');
 });

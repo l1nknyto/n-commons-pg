@@ -1,25 +1,35 @@
 // constructor()
+// setOptions(key, value)
 // addTable(crud|{ sql, relations }, alias = '', join = 'JOIN', relations = [])
 // setTableData(table, data)
 // addWhere(table, field, value, operator = '=', conjuction = 'AND', rawValue = false)
 // addWhereObject(table, array)
 // addWhereGroup(group, conjuction = null, table = null)
 // setWhereRaw(value)
-// useReturning(value)
 // getTableByClass(cl)
 // getTableByAlias(alias)
 
 // build()
 class QueryBuilder {
-  constructor() {
+
+  constructor(options = null) {
     this.tables = new Map();
     this.tableData = new Map();
     this.whereRaw = '';
     this.wheres = [];
     this.params = [];
-    this.options = {
-      useReturning: null
-    };
+    this.options = this.initOptions(options);
+  }
+
+  initOptions(opts) {
+    var options = (opts) ? opts : {};
+    if (typeof options.paramIndex === 'undefined') options.paramIndex = 0;
+    if (typeof options.useReturning === 'undefined') options.useReturning = false;
+    return options;
+  }
+
+  setOptions(key, value) {
+    this.options[key] = value;
   }
 
   /**
@@ -103,24 +113,16 @@ class QueryBuilder {
     return this;
   }
 
-  useReturning(value) {
-    this.options.useReturning = value;
-    return this;
-  }
-
   build() {
-    var sql = this._buildSql() + this.getReturning();
-    var results = {
-      sql: sql,
+    return {
+      sql: this._buildSql() + this.getReturning(),
       params: this.params
     };
-    this.params = [];
-    return results;
   }
 
   getReturning() {
-    var useReturning = (this.options.useReturning != null) ?
-      this.options.useReturning : this.getFirstTable().options.useReturning;
+    var optRetuning = this.options.useReturning;
+    var useReturning = (optRetuning != null) ? optRetuning : this.getFirstTable().options.useReturning;
     return (useReturning) ? ' RETURNING *' : '';
   }
 
@@ -183,13 +185,17 @@ class QueryBuilder {
   }
 
   createCondition(field, value, operator) {
-    this.params.push(value);
-    var varIndex = '$' + this.params.length;
-    if (operator.indexOf('$') != -1) {
-      return field + operator.replace("$", varIndex);
+    if (operator.indexOf('$') != -1) {this
+      return field + operator.replace(this.getPrepareParam(value));
     } else {
-      return field + operator + '$' + this.params.length;
+      return field + operator + this.getPrepareParam(value);
     }
+  }
+
+  getPrepareParam(value) {
+    this.params.push(value);
+    this.options.paramIndex++;
+    return '$' + this.options.paramIndex;
   }
 
   appendCondition(sql, condition, conjuction) {
