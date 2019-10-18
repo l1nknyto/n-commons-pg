@@ -24,7 +24,6 @@ class QueryBuilder {
   initOptions(opts) {
     var options = (opts) ? opts : {};
     if (typeof options.paramIndex === 'undefined') options.paramIndex = 0;
-    if (typeof options.useReturning === 'undefined') options.useReturning = false;
     return options;
   }
 
@@ -122,7 +121,7 @@ class QueryBuilder {
 
   getReturning() {
     var optRetuning = this.options.useReturning;
-    var useReturning = (optRetuning != null) ? optRetuning : this.getFirstTable().options.useReturning;
+    var useReturning = (typeof optRetuning !== 'undefined') ? optRetuning : this.getFirstTable().options.useReturning;
     return (useReturning) ? ' RETURNING *' : '';
   }
 
