@@ -106,7 +106,7 @@ class Crud extends CrudInterface {
   create() {
     var exec = this.beforeCUD(arguments);
     if (!this.isInsertableParams(exec.params)) {
-      return exec.callback(null, {}, { count: 0 });
+      return exec.callback(null, {}, { count: 0, params: exec.params });
     }
 
     var builder = new InsertBuilder();
@@ -134,7 +134,7 @@ class Crud extends CrudInterface {
         Logger.debug(this.constructor.name + '.executeQuery', query);
       }
       exec.executor.execute(query.sql, query.params, NCommons.ok(exec.callback, function (rows, count) {
-        return exec.callback(null, (rows) ? rows[0] : {}, { count: count, rows: rows });
+        return exec.callback(null, (rows) ? rows[0] : {}, { count: count, rows: rows, params: exec.params });
       }));
     } else {
       return exec.callback(null, {});
@@ -205,7 +205,7 @@ class Crud extends CrudInterface {
   update() {
     var exec = this.beforeCUD(arguments);
     if (!this.isUpdateableParams(exec.params)) {
-      return exec.callback(null, {}, { count: 0 });
+      return exec.callback(null, {}, { count: 0, params: exec.params });
     }
 
     var builder = new UpdateBuilder();
@@ -234,9 +234,9 @@ class Crud extends CrudInterface {
     var exec = this.beforeCUD(arguments);
     var updateWithExisting = (existing) => {
       var params = this.getChanges(existing, exec.params);
-      this.update(exec.executor, params, NCommons.ok(exec.callback, (row, extra) => {
-        extra.params = params;
-        return exec.callback(null, row, extra);
+      this.update(exec.executor, params, NCommons.ok(exec.callback, (row, extras) => {
+        extras.params = params;
+        return exec.callback(null, row, extras);
       }));
     };
 
