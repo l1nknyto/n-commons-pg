@@ -171,6 +171,7 @@ class Crud extends CrudInterface {
     this.initQueryBuilder(builder, params);
     if (params.__noTimestamp) builder.addNoTimestamp(this);
     if (params.__select) builder.addSelect(this, params.__select);
+    if (params.__selectRaw) builder.addSelect(this, params.__selectRaw, true);
     if (params.__order) builder.addOrders(this, params.__order);
     if (params.__limit) builder.setLimit(params.__limit[0], params.__limit[1]);
     return builder;
